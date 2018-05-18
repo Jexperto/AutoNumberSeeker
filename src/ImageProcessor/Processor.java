@@ -1,6 +1,9 @@
 package ImageProcessor;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class Processor {
 
@@ -10,18 +13,36 @@ public class Processor {
         this.originImage = originImage;
     }
 
-    private boolean getRectangleImage(BufferedImage rectImage) {
-        // TODO: 18.05.2018 Должна выделять и возвращать буфер с прямоугольником номера.
-        return false;
+    private BufferedImage contrastProcessor(BufferedImage origImage) {
+        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+        for (int i = 0; i < work.getWidth(); i++) {
+            for (int j = 0; j < work.getHeight(); j++) {
+                int color = origImage.getRGB(i, j);
+                if (((color & 0x00ff0000) < 0x00a00000) && ((color & 0x0000ff00) < 0x0000a000) && ((color & 0x000000ff) < 0x000000a0))
+                    work.setRGB(i, j, 0);
+                else
+                    work.setRGB(i, j, 0x00FFFFFF);
+
+            }
+        }
+        return work;
     }
 
-    private void rotationToNormal(BufferedImage rotImage) {
+    private BufferedImage getRectangleImage(BufferedImage origImage) {
+        // TODO: 18.05.2018 Должна выделять и возвращать буфер с прямоугольником номера.
+
+        return null;
+    }
+
+    private BufferedImage rotationToNormal(BufferedImage orignImage) {
         // TODO: 18.05.2018 Должна повернуть изображение, если оно кривое.
+        return null;
     }
 
     //Возможно уберу.
-    private void normalizeImage(BufferedImage normImage) {
+    private BufferedImage normalizeImage(BufferedImage orignImage) {
         // TODO: 18.05.2018 Сложная обработка, если знак повернут по осям.
+        return null;
     }
 
     private boolean checkAutoNumber(BufferedImage numImage) {
@@ -32,14 +53,30 @@ public class Processor {
     boolean getNormalImage(BufferedImage normalImage) {
         // TODO: 18.05.2018 Обработка исходного изображения, для получения изображения номера.
         BufferedImage workImage = new BufferedImage(originImage.getWidth(), originImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        //if (getRectangleImage(normalImage)) {
         rotationToNormal(workImage);
-        if (getRectangleImage(workImage)) {
-            normalizeImage(workImage);
-            normalImage = new BufferedImage(workImage.getWidth(), workImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-            normalImage.setData(workImage.getData());
-            return true;
-        }
+        normalizeImage(workImage);
+        normalImage = new BufferedImage(workImage.getWidth(), workImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        normalImage.setData(workImage.getData());
+        //  return true;
+        //}
         return false;
+    }
+
+    public void testing() {
+        BufferedImage res;
+
+        res = contrastProcessor(originImage);
+
+        System.out.println("testing...");
+        if (res == null)
+            return;
+
+        try {
+            ImageIO.write(res, "png", new File("testRes.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
