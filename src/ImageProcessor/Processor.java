@@ -24,6 +24,11 @@ public class Processor {
         // TODO: 18.05.2018 Сложная обработка, если знак повернут по осям.
     }
 
+    private boolean checkAutoNumber(BufferedImage numImage) {
+        // TODO: 18.05.2018 Должа проверить, есть ли на картинке номер.
+        return false;
+    }
+
     boolean getNormalImage(BufferedImage normalImage) {
         // TODO: 18.05.2018 Обработка исходного изображения, для получения изображения номера.
         BufferedImage workImage = new BufferedImage(originImage.getWidth(), originImage.getHeight(), BufferedImage.TYPE_INT_RGB);
