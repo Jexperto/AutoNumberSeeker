@@ -18,7 +18,14 @@ public class Processor {
         for (int i = 0; i < work.getWidth(); i++) {
             for (int j = 0; j < work.getHeight(); j++) {
                 int color = origImage.getRGB(i, j);
-                //color += 0x00f000f0; // Повышение яркости
+
+                int red = (color >>> 16) & 0xFF;
+                int green = (color >>> 8) & 0xFF;
+                int blue = color & 0xFF;
+
+                if ((red > 50) && (Math.abs(red - green) < 40) && (Math.abs(red - blue) < 60) && (Math.abs(blue - green) < 40))
+                    color = 0x00FFFFFF;
+
                 //схема цвета: 0xAARRGGBB, где AA - прозрачность (не учитывается), RR - красный, GG - зелёный, BB - синий.
                 //Граничные условия определяют границу разделения цветов на черный и белый.
                 //На данный момент условия закреплены, если для некоторых изображений будут осечки, придётся делать их динамичными.
@@ -77,7 +84,7 @@ public class Processor {
             return;
 
         try {
-            ImageIO.write(res, "png", new File("testRes.png"));
+            ImageIO.write(res, "png", new File("testRes1.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
