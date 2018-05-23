@@ -9,7 +9,7 @@ public class Main {
     // TODO: 18.05.2018 Сделать всё.
 
     public static void main(String[] args) throws IOException {
-        BufferedImage bufferedImage = ImageIO.read(new File("test4.jpg"));
+        BufferedImage bufferedImage = ImageIO.read(new File("test2.jpg"));
 
         System.out.println("doing...");
         if (bufferedImage == null)

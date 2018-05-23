@@ -13,20 +13,54 @@ public class Processor {
         this.originImage = originImage;
     }
 
-    private BufferedImage contrastProcessor(BufferedImage origImage) {
-        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
-        for (int i = 0; i < work.getWidth(); i++) {
-            for (int j = 0; j < work.getHeight(); j++) {
+    private BufferedImage[] contrastProcessor(BufferedImage origImage) {
+        BufferedImage[] work = new BufferedImage[1];
+        work[0] = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+        //work[1] = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+        //work[2] = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+        for (int i = 0; i < work[0].getWidth(); i++) {
+            for (int j = 0; j < work[0].getHeight(); j++) {
                 int color = origImage.getRGB(i, j);
                 //color += 0x00f000f0; // Повышение яркости
+
+                /*
+                int lightColor1 = 0;
+                int lightColor2 = 0;
+                if((((color & 0x00FF0000) + 0x000a0000) & 0xFF000000) == 0)
+                    lightColor1 += (color & 0x00FF0000) + 0x000a0000;
+                else
+                    lightColor1 +=0x00FF0000;
+                if(((color & 0x000000FF + 0x0000000a) & 0x0000FF00) == 0)
+                    lightColor2 += (color & 0x000000FF) + 0x0000000a;
+                else
+                    lightColor2 += 0x000000FF;
+                lightColor1 += color & 0x0000FF00;
+                lightColor2 += color & 0x0000FF00;*/
+
+                int red = (color >>> 16) & 0xFF;
+                int green = (color >>> 8) & 0xFF;
+                int blue = color & 0xFF;
+
+                if ((red > 50) && (Math.abs(red - green) < 40) && (Math.abs(red - blue) < 60) && (Math.abs(blue - green) < 40))
+                    color = 0x00FFFFFF;
+
                 //схема цвета: 0xAARRGGBB, где AA - прозрачность (не учитывается), RR - красный, GG - зелёный, BB - синий.
                 //Граничные условия определяют границу разделения цветов на черный и белый.
                 //На данный момент условия закреплены, если для некоторых изображений будут осечки, придётся делать их динамичными.
                 if (((color & 0x00ff0000) < 0x00f00000) && ((color & 0x0000ff00) < 0x0000a000) && ((color & 0x000000ff) < 0x000000f0))
-                    work.setRGB(i, j, 0);
+                    work[0].setRGB(i, j, 0);
                 else
-                    work.setRGB(i, j, 0x00FFFFFF);
+                    work[0].setRGB(i, j, 0x00FFFFFF);
 
+//                if (((lightColor1 & 0x00ff0000) < 0x00f00000) && ((lightColor1 & 0x0000ff00) < 0x0000a000) && ((lightColor1 & 0x000000ff) < 0x000000f0))
+//                    work[1].setRGB(i, j, 0);
+//                else
+//                    work[1].setRGB(i, j, 0x00FFFFFF);
+//
+//                if (((lightColor2 & 0x00ff0000) < 0x00f00000) && ((lightColor2 & 0x0000ff00) < 0x0000a000) && ((lightColor2 & 0x000000ff) < 0x000000f0))
+//                    work[1].setRGB(i, j, 0);
+//                else
+//                    work[1].setRGB(i, j, 0x00FFFFFF);
             }
         }
         return work;
@@ -68,7 +102,7 @@ public class Processor {
     }
 
     public void testing() {
-        BufferedImage res;
+        BufferedImage[] res;
 
         res = contrastProcessor(originImage);
 
@@ -77,7 +111,9 @@ public class Processor {
             return;
 
         try {
-            ImageIO.write(res, "png", new File("testRes.png"));
+            ImageIO.write(res[0], "png", new File("testRes1.png"));
+            //ImageIO.write(res[1], "png", new File("testRes2.png"));
+            //ImageIO.write(res[2], "png", new File("testRes3.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
