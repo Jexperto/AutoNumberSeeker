@@ -1,9 +1,6 @@
 package ImageProcessor;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
 public class Processor {
 
@@ -74,20 +71,13 @@ public class Processor {
         return false;
     }
 
-    public void testing() {
+    public BufferedImage testing() {
         BufferedImage res;
 
         res = contrastProcessor(originImage);
 
         System.out.println("testing...");
-        if (res == null)
-            return;
-
-        try {
-            ImageIO.write(res, "png", new File("testRes1.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return res;
     }
 
 }
