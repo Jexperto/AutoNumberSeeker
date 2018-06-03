@@ -3,7 +3,6 @@ package GUI;
 import ImageProcessor.Processor;
 
 import javax.imageio.ImageIO;
-import javax.naming.ldap.Control;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
@@ -21,33 +20,37 @@ public class ControlsPanel extends JPanel implements ActionListener {
     File file;
     BufferedImage originalBufferedImage;
     final JFileChooser fc;
-    JFrame mainFrame;
+    Main mainFrame;
 
-    ControlsPanel() throws IOException {
+    ControlsPanel(Main main) {
         openFileButton = new Button("Открыть файл...");
-        openFileButton.setBounds(25,525,100,25);
+        openFileButton.setBounds(25, 525, 100, 25);
         openFileButton.addActionListener(this);
         runButton = new Button("Тестировать");
-        runButton.setBounds(540,525,100,25);
+        runButton.setBounds(540, 525, 100, 25);
         runButton.addActionListener(this);
         filePathField = new TextField("Путь к файлу...");
         filePathField.setEditable(false);
-        filePathField.setBounds(130,525,400,25);
+        filePathField.setBounds(130, 525, 400, 25);
         fc = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Images(.png, .jpg, .jpeg, .gif)", "png", "jpg","jpeg", "gif");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Images(.png, .jpg, .jpeg, .gif)", "png", "jpg", "jpeg", "gif");
         fc.addChoosableFileFilter(filter);
         fc.setAcceptAllFileFilterUsed(false);
+        mainFrame = main;
 
         File currentDirFile = new File(".");
         String helper = currentDirFile.getAbsolutePath();
-        String currentDir = helper.substring(0, helper.length() - currentDirFile.getCanonicalPath().length());
-
+        try {
+            String currentDir = helper.substring(0, helper.length() - currentDirFile.getCanonicalPath().length());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
         fc.setCurrentDirectory(new File("."));
-        Main.mainWindow.add(openFileButton);
-        Main.mainWindow.add(filePathField);
-        Main.mainWindow.add(runButton);
+        mainFrame.add(openFileButton);
+        mainFrame.add(filePathField);
+        mainFrame.add(runButton);
     }
 
     @Override
@@ -62,7 +65,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
                 try {
                     originalBufferedImage = ImageIO.read(file);
                     ImageCanvas imageCanvas = new ImageCanvas(originalBufferedImage);
-                    Main.mainWindow.add(imageCanvas);
+                    mainFrame.add(imageCanvas);
                     imageCanvas.repaint();
                 } catch (IOException e1) {
                     e1.printStackTrace();
@@ -74,25 +77,25 @@ public class ControlsPanel extends JPanel implements ActionListener {
         }
         if (e.getSource() == runButton) {
 
-                System.out.println("doing...");
-                if (originalBufferedImage == null)
-                    return;
-                Processor processor = new Processor(originalBufferedImage);
-                BufferedImage res = processor.testing();
-                try {
-                    ImageCanvas imageCanvas = new ImageCanvas(res);
-                    Main.mainWindow.add(imageCanvas);
-                    imageCanvas.repaint();
-                    System.out.println("Saving as testres.png...");
-                    ImageIO.write(res, "png", new File("testRes.png"));
-                    System.out.println("Done.");
+            System.out.println("doing...");
+            if (originalBufferedImage == null)
+                return;
+            Processor processor = new Processor(originalBufferedImage);
+            BufferedImage res = processor.testing();
+            try {
+                ImageCanvas imageCanvas = new ImageCanvas(res);
+                mainFrame.add(imageCanvas);
+                imageCanvas.repaint();
+                System.out.println("Saving as testres.png...");
+                ImageIO.write(res, "png", new File("testRes.png"));
+                System.out.println("Done.");
 
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-
+            } catch (IOException e1) {
+                e1.printStackTrace();
             }
+
         }
+    }
 
 
     public BufferedImage getOriginalBufferedImage() {
