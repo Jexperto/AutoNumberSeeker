@@ -4,13 +4,7 @@ import java.awt.image.BufferedImage;
 
 public class Processor {
 
-    private BufferedImage originImage;
-
-    public Processor(BufferedImage originImage) {
-        this.originImage = originImage;
-    }
-
-    private BufferedImage contrastProcessor(BufferedImage origImage) {
+    public static BufferedImage contrastProcessor(BufferedImage origImage) {
         BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
         for (int i = 0; i < work.getWidth(); i++) {
             for (int j = 0; j < work.getHeight(); j++) {
@@ -58,27 +52,27 @@ public class Processor {
         return false;
     }
 
-    boolean getNormalImage(BufferedImage normalImage) {
-        // TODO: 18.05.2018 Обработка исходного изображения, для получения изображения номера.
-        BufferedImage workImage = new BufferedImage(originImage.getWidth(), originImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-        //if (getRectangleImage(normalImage)) {
-        rotationToNormal(workImage);
-        normalizeImage(workImage);
-        normalImage = new BufferedImage(workImage.getWidth(), workImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-        normalImage.setData(workImage.getData());
-        //  return true;
-        //}
-        return false;
-    }
+//    boolean getNormalImage(BufferedImage normalImage) {
+//        // TODO: 18.05.2018 Обработка исходного изображения, для получения изображения номера.
+//        BufferedImage workImage = new BufferedImage(originImage.getWidth(), originImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+//        //if (getRectangleImage(normalImage)) {
+//        rotationToNormal(workImage);
+//        normalizeImage(workImage);
+//        normalImage = new BufferedImage(workImage.getWidth(), workImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+//        normalImage.setData(workImage.getData());
+//        //  return true;
+//        //}
+//        return false;
+//    }
 
-    public BufferedImage testing() {
-        BufferedImage res;
-
-        res = contrastProcessor(originImage);
-
-        System.out.println("testing...");
-        return res;
-    }
+//    public BufferedImage testing() {
+//        BufferedImage res;
+//
+//        res = contrastProcessor(originImage);
+//
+//        System.out.println("testing...");
+//        return res;
+//    }
 
 //    private class Contrasting implements Runnable{
 //

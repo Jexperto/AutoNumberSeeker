@@ -28,22 +28,9 @@ public class ImageCanvas extends JPanel {
         g.drawImage(originalBufferedImage, 0, 0, (img, infoflags, x, y, width, height) -> false);
     }
 
-
-    private Image getScaledImage(BufferedImage bf) {
-        return bf.getScaledInstance(bf.getWidth(), (int) (bf.getHeight() * getRatio(bf)), Image.SCALE_SMOOTH);
-    }
-
     public void setOriginalBufferedImage(BufferedImage originalBufferedImage) {
         this.originalBufferedImage = originalBufferedImage;
         setBounds(0, 0, originalBufferedImage.getWidth(), originalBufferedImage.getHeight());
-    }
-
-    public float getRatio(BufferedImage originalBufferedImage) {
-        int imageHeight = originalBufferedImage.getHeight();
-        if (imageHeight > HEIGHT)
-            return HEIGHT / imageHeight;
-        else
-            return imageHeight / HEIGHT;
     }
 
     public BufferedImage scaleImage(BufferedImage originalBufferedImage) {
