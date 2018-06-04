@@ -57,6 +57,7 @@ public class ControlsPanel implements ActionListener {
                     filePathField.setText(file.getPath());
                     try {
                         originalBufferedImage = ImageIO.read(file);
+                        originalBufferedImage = imageCanvas.scaleImage(originalBufferedImage);
                         imageCanvas.setOriginalBufferedImage(originalBufferedImage);
                         imageCanvas.repaint();
                     } catch (IOException e1) {
@@ -80,7 +81,7 @@ public class ControlsPanel implements ActionListener {
             try {
                 imageCanvas.setOriginalBufferedImage(res);
                 imageCanvas.repaint();
-                System.out.println("Saving as testres.png...");
+                System.out.println("Saving as testRes.png...");
                 ImageIO.write(res, "png", new File("testRes.png"));
                 System.out.println("Done.");
 
