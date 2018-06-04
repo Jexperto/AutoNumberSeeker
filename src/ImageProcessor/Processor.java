@@ -1,9 +1,6 @@
 package ImageProcessor;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
 public class Processor {
 
@@ -18,7 +15,18 @@ public class Processor {
         for (int i = 0; i < work.getWidth(); i++) {
             for (int j = 0; j < work.getHeight(); j++) {
                 int color = origImage.getRGB(i, j);
-                if (((color & 0x00ff0000) < 0x00a00000) && ((color & 0x0000ff00) < 0x0000a000) && ((color & 0x000000ff) < 0x000000a0))
+
+                int red = (color >>> 16) & 0xFF;
+                int green = (color >>> 8) & 0xFF;
+                int blue = color & 0xFF;
+
+                if ((red > 50) && (Math.abs(red - green) < 40) && (Math.abs(red - blue) < 60) && (Math.abs(blue - green) < 40))
+                    color = 0x00FFFFFF;
+
+                //схема цвета: 0xAARRGGBB, где AA - прозрачность (не учитывается), RR - красный, GG - зелёный, BB - синий.
+                //Граничные условия определяют границу разделения цветов на черный и белый.
+                //На данный момент условия закреплены, если для некоторых изображений будут осечки, придётся делать их динамичными.
+                if (((color & 0x00ff0000) < 0x00f00000) && ((color & 0x0000ff00) < 0x0000a000) && ((color & 0x000000ff) < 0x000000f0))
                     work.setRGB(i, j, 0);
                 else
                     work.setRGB(i, j, 0x00FFFFFF);
@@ -63,20 +71,13 @@ public class Processor {
         return false;
     }
 
-    public void testing() {
+    public BufferedImage testing() {
         BufferedImage res;
 
         res = contrastProcessor(originImage);
 
         System.out.println("testing...");
-        if (res == null)
-            return;
-
-        try {
-            ImageIO.write(res, "png", new File("testRes.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return res;
     }
 
 }
