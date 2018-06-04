@@ -67,7 +67,9 @@ public class ImageCanvas extends JPanel {
     public double scaleMagnitude(BufferedImage originalBufferedImage) {
         if (originalBufferedImage.getHeight() < HEIGHT && originalBufferedImage.getWidth() < WIDTH)
             return -1;
-        return originalBufferedImage.getWidth() < originalBufferedImage.getHeight() ? (double) WIDTH / originalBufferedImage.getWidth() : (double) HEIGHT / originalBufferedImage.getHeight();
+//           return originalBufferedImage.getWidth() > originalBufferedImage.getHeight() ? (double) WIDTH / originalBufferedImage.getWidth() : (double) HEIGHT / originalBufferedImage.getHeight();
+        return Math.min((double) WIDTH / originalBufferedImage.getWidth(), (double) HEIGHT / originalBufferedImage.getHeight());
+
     }
 
 
