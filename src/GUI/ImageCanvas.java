@@ -54,6 +54,8 @@ public class ImageCanvas extends JPanel {
             return null;
         }
         double scaleMag = scaleMagnitude(originalBufferedImage);
+        if (scaleMag < 0)
+            return originalBufferedImage;
         int w = originalBufferedImage.getWidth();
         int h = originalBufferedImage.getHeight();
         BufferedImage scaledBufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
@@ -67,6 +69,8 @@ public class ImageCanvas extends JPanel {
     }
 
     public double scaleMagnitude(BufferedImage originalBufferedImage) {
+        if (originalBufferedImage.getHeight() < HEIGHT && originalBufferedImage.getWidth() < WIDTH)
+            return -1;
         return originalBufferedImage.getWidth() < originalBufferedImage.getHeight() ? (double) WIDTH / originalBufferedImage.getWidth() : (double) HEIGHT / originalBufferedImage.getHeight();
     }
 
