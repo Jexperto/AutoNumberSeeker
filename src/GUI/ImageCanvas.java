@@ -13,10 +13,10 @@ public class ImageCanvas extends JPanel {
     private final int WIDTH = 800;
     private final int HEIGHT = 500;
 
-    ImageCanvas(BufferedImage originalBufferedImage) {
-        this.originalBufferedImage = originalBufferedImage;
-        setBounds(0, 0, WIDTH, HEIGHT);
-        repaint();
+    ImageCanvas(/*BufferedImage originalBufferedImage*/) {
+//        this.originalBufferedImage = originalBufferedImage;
+//        setBounds(0, 0, WIDTH, HEIGHT);
+//        repaint();
 
     }
 

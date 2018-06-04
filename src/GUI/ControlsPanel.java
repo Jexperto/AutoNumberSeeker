@@ -12,15 +12,14 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class ControlsPanel extends JPanel implements ActionListener {
+public class ControlsPanel implements ActionListener {
 
-    Button openFileButton;
-    Button runButton;
-    TextField filePathField;
-    File file;
-    BufferedImage originalBufferedImage;
-    final JFileChooser fc;
-    Main mainFrame;
+    private Button openFileButton;
+    private Button runButton;
+    private TextField filePathField;
+    private ImageCanvas imageCanvas;
+    private BufferedImage originalBufferedImage;
+    private Main mainFrame;
 
     ControlsPanel(Main main) {
         openFileButton = new Button("Открыть файл...");
@@ -32,59 +31,54 @@ public class ControlsPanel extends JPanel implements ActionListener {
         filePathField = new TextField("Путь к файлу...");
         filePathField.setEditable(false);
         filePathField.setBounds(130, 525, 400, 25);
-        fc = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Images(.png, .jpg, .jpeg, .gif)", "png", "jpg", "jpeg", "gif");
-        fc.addChoosableFileFilter(filter);
-        fc.setAcceptAllFileFilterUsed(false);
+        imageCanvas = new ImageCanvas();
+
         mainFrame = main;
 
-        File currentDirFile = new File(".");
-        String helper = currentDirFile.getAbsolutePath();
-        try {
-            String currentDir = helper.substring(0, helper.length() - currentDirFile.getCanonicalPath().length());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-
-        fc.setCurrentDirectory(new File("."));
         mainFrame.add(openFileButton);
         mainFrame.add(filePathField);
         mainFrame.add(runButton);
+        mainFrame.add(imageCanvas);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         //Handle open button action.
         if (e.getSource() == openFileButton) {
-            int returnVal = fc.showOpenDialog(ControlsPanel.this);
-
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                file = fc.getSelectedFile();
-                filePathField.setText(file.getPath());
-                try {
-                    originalBufferedImage = ImageIO.read(file);
-                    ImageCanvas imageCanvas = new ImageCanvas(originalBufferedImage);
-                    mainFrame.add(imageCanvas);
-                    imageCanvas.repaint();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-
-            } else {
-                System.out.println("Open command cancelled by user.\n");
+            JFileChooser fileChooser = new JFileChooser();
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Images(.png, .jpg, .jpeg, .gif)", "png", "jpg", "jpeg", "gif");
+            fileChooser.addChoosableFileFilter(filter);
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            fileChooser.setCurrentDirectory(new File("."));
+            switch (fileChooser.showOpenDialog(mainFrame)) {
+                case JFileChooser.APPROVE_OPTION:
+                    File file = fileChooser.getSelectedFile();
+                    filePathField.setText(file.getPath());
+                    try {
+                        originalBufferedImage = ImageIO.read(file);
+                        imageCanvas.setOriginalBufferedImage(originalBufferedImage);
+                        imageCanvas.repaint();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    break;
+                case JFileChooser.CANCEL_OPTION:
+                    System.out.println("Canceled load.");
+                    break;
             }
         }
         if (e.getSource() == runButton) {
 
             System.out.println("doing...");
-            if (originalBufferedImage == null)
+            if (originalBufferedImage == null) {
+                System.out.println("Not image");
                 return;
+            }
             Processor processor = new Processor(originalBufferedImage);
             BufferedImage res = processor.testing();
             try {
-                ImageCanvas imageCanvas = new ImageCanvas(res);
-                mainFrame.add(imageCanvas);
+                imageCanvas.setOriginalBufferedImage(res);
                 imageCanvas.repaint();
                 System.out.println("Saving as testres.png...");
                 ImageIO.write(res, "png", new File("testRes.png"));
@@ -95,10 +89,10 @@ public class ControlsPanel extends JPanel implements ActionListener {
             }
 
         }
+
     }
 
+    public void close() {
 
-    public BufferedImage getOriginalBufferedImage() {
-        return originalBufferedImage;
     }
 }
