@@ -21,6 +21,7 @@ public class ControlsPanel implements ActionListener {
     private TextField filePathField;
     private ImageCanvas imageCanvas;
     private BufferedImage originalBufferedImage;
+    private BufferedImage subBufferedImage;
     private Main mainFrame;
     private PointRep pointRep1;
     private PointRep pointRep2;
@@ -72,6 +73,29 @@ public class ControlsPanel implements ActionListener {
                         System.out.println("Point2 unset");
                     }
                 }
+
+                if (pointRep1 != null && pointRep2 != null) {
+
+                    int x = Math.min(pointRep1.x, pointRep2.x);
+                    int y = Math.min(pointRep1.y, pointRep2.y);
+                    int w = Math.abs(pointRep1.x - pointRep2.x);
+                    int h = Math.abs(pointRep1.y - pointRep2.y);
+
+                    int[] mass = new int[w * h];
+
+                    subBufferedImage = new BufferedImage(originalBufferedImage.getWidth(), originalBufferedImage.getHeight(), originalBufferedImage.getType());
+
+                    originalBufferedImage.getRGB(x, y, w, h, mass, 0, w);
+                    subBufferedImage.setRGB(x, y, w, h, mass, 0, w);
+
+                    imageCanvas.setOriginalBufferedImage(subBufferedImage);
+
+                } else {
+
+                    imageCanvas.setOriginalBufferedImage(originalBufferedImage);
+
+                }
+
                 imageCanvas.repaint();
             }
 
@@ -134,7 +158,26 @@ public class ControlsPanel implements ActionListener {
                 System.out.println("Not image");
                 return;
             }
-            BufferedImage res = Processor.contrastProcessor(originalBufferedImage);
+            BufferedImage res;
+            if (pointRep1 != null && pointRep2 != null) {
+
+                int x = Math.min(pointRep1.x, pointRep2.x);
+                int y = Math.min(pointRep1.y, pointRep2.y);
+                int w = Math.abs(pointRep1.x - pointRep2.x);
+                int h = Math.abs(pointRep1.y - pointRep2.y);
+
+                imageCanvas.remove(pointRep1);
+                imageCanvas.remove(pointRep2);
+                pointRep1 = null;
+                pointRep2 = null;
+
+                BufferedImage subImage = originalBufferedImage.getSubimage(x, y, w, h);
+
+                res = Processor.contrastProcessor(subImage);
+
+            } else
+                res = Processor.contrastProcessor(originalBufferedImage);
+
             try {
                 imageCanvas.setOriginalBufferedImage(res);
                 imageCanvas.repaint();
@@ -159,25 +202,18 @@ public class ControlsPanel implements ActionListener {
 
         int x;
         int y;
-        BufferedImage bufferedImage;
 
-        public PointRep(int x, int y) {
+        PointRep(int x, int y) {
             this.x = x;
             this.y = y;
             setBounds(x - 10, y - 10, 20, 20);
-            bufferedImage = new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB);
-            for (double i = 0; i < Math.PI; i += .001) {
-                for (int j = 10 - (int) (10 * Math.cos(i)); j < 10 + (int) (10 * Math.cos(i)); j++) {
-                    bufferedImage.setRGB((int) (10 * Math.sin(i)), j, 0x0000FF00);
-                }
-            }
         }
 
         public boolean collis(PointRep pointRep) {
             return ((pointRep.x - this.x) * (pointRep.x - this.x) + (pointRep.y - this.y) * (pointRep.y - this.y)) < 100;
         }
 
-        public boolean collis(int x, int y) {
+        boolean collis(int x, int y) {
             return ((x - this.x) * (x - this.x) + (y - this.y) * (y - this.y)) < 100;
         }
 
@@ -185,7 +221,8 @@ public class ControlsPanel implements ActionListener {
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             System.out.println("drawing");
-            g.drawImage(bufferedImage, x - 10, y - 10, 20, 20, null);
+            g.setColor(Color.GREEN);
+            g.fillOval(0, 0, 20, 20);
         }
     }
 }
