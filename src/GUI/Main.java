@@ -4,6 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class Main extends JFrame {
 
@@ -61,9 +67,34 @@ public class Main extends JFrame {
 
 
     public static void main(String[] args) {
+        initTessdata();
         Main main = new Main("Распознавание автомобильных номеров");
         main.setVisible(true);
     }
 
+
+    public static void initTessdata() {
+
+        File file = new File("tessdata");
+        if (!file.exists() || !file.isDirectory()) {
+            file.mkdir();
+            try {
+                JarFile jarFile = new JarFile(new File("AutoNumberSeeker.jar"));
+                JarEntry jarEntry = new JarEntry("tessdata/lau.traineddata");
+                InputStream in = jarFile.getInputStream(jarEntry);
+                FileOutputStream out = new FileOutputStream("tessdata\\leu.traineddata");
+                int t;
+                while ((t = in.read()) != -1) {
+                    out.write(t);
+                }
+                in.close();
+                out.close();
+                jarFile.close();
+            } catch (IOException e) {
+                System.exit(-1);
+            }
+        }
+
+    }
 
 }

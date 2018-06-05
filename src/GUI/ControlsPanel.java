@@ -155,6 +155,7 @@ public class ControlsPanel implements ActionListener {
         tesseract = new Tesseract();
         tesseract.setLanguage("leu");
         tesseract.setDatapath(".");
+        tesseract.setTessVariable("tessedit_char_whitelist", "acekopxyABCEHKMOPTXYD0123456789");
     }
 
     @Override
@@ -185,7 +186,7 @@ public class ControlsPanel implements ActionListener {
                         imageCanvas.setOriginalBufferedImage(originalBufferedImage);
                         imageCanvas.repaint();
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                        showDialog("Ошибка загрузки изображения", e1.getMessage());
                     }
                     break;
                 case JFileChooser.CANCEL_OPTION:
@@ -233,49 +234,42 @@ public class ControlsPanel implements ActionListener {
 
                 System.out.println("Testing tess...");
 
-                System.out.println(tesseract.doOCR(res));
+                String result = tesseract.doOCR(res);
+
+                System.out.println(result);
+                showDialog("Результат распознавания", result);
 
                 System.out.println("Done.");
 
             } catch (IOException | TesseractException e1) {
-                e1.printStackTrace();
+                showDialog("Странная ошибка", e1.getMessage());
             }
 
         }
         if (e.getSource() == filePathField) {
             File file = new File(e.getActionCommand());
 
-            String errorMessage = "";
-
-            if (!file.isFile())
-                errorMessage = "It is not file!!!";
-            else if (file.canRead()) {
                 try {
                     originalBufferedImage = ImageIO.read(file);
                     originalBufferedImage = imageCanvas.scaleImage(originalBufferedImage);
                     imageCanvas.setOriginalBufferedImage(originalBufferedImage);
                     imageCanvas.repaint();
+
+                    filePathField.setEditable(false);
                 } catch (IOException e1) {
-                    errorMessage = "It is not image!";
+                    showDialog("Ошибка загрузки изображения", e1.getMessage());
                 }
 
-                filePathField.setEditable(false);
 
-            } else
-                errorMessage = "Can't read file!!!";
-            if (!errorMessage.isEmpty()) {
-                //filePathField.setText("Не является файлом, либо файл невозможно прочитать");
-                showErrorDialog(errorMessage);
-            }
 
 
         }
 
     }
 
-    private void showErrorDialog(String errorMessage) {
+    private void showDialog(String title, String errorMessage) {
 
-        JDialog dialog = new JDialog(mainFrame, "Ошибка открытия файла", JDialog.DEFAULT_MODALITY_TYPE);
+        JDialog dialog = new JDialog(mainFrame, title, JDialog.DEFAULT_MODALITY_TYPE);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         JTextField textArea = new JTextField(errorMessage);
         textArea.setEditable(false);
@@ -287,7 +281,7 @@ public class ControlsPanel implements ActionListener {
     }
 
     public void close() {
-
+        new File("testRes.png").delete();
     }
 
 
