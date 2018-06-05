@@ -6,10 +6,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +15,8 @@ public class ControlsPanel implements ActionListener {
 
     private Button openFileButton;
     private Button runButton;
-    private TextField filePathField;
+    private JTextField filePathField;
+    private boolean textFieldEntered;
     private ImageCanvas imageCanvas;
     private BufferedImage originalBufferedImage;
     private BufferedImage subBufferedImage;
@@ -33,9 +31,37 @@ public class ControlsPanel implements ActionListener {
         runButton = new Button("Тестировать");
         runButton.setBounds(540, 525, 100, 25);
         runButton.addActionListener(this);
-        filePathField = new TextField("Путь к файлу...");
+        filePathField = new JTextField("Путь к файлу...");
+        textFieldEntered = false;
         filePathField.setEditable(false);
         filePathField.setBounds(130, 525, 400, 25);
+        filePathField.addActionListener(this);
+        filePathField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                super.mouseEntered(e);
+                textFieldEntered = true;
+                System.out.println("Entered");
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                textFieldEntered = false;
+                System.out.println("Exited");
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+                if (textFieldEntered) {
+                    if (filePathField.getText().equals("Путь к файлу..."))
+                        filePathField.setText("");
+                    filePathField.setEditable(true);
+                    System.out.println("Wr");
+                }
+            }
+        });
         imageCanvas = new ImageCanvas();
 
         imageCanvas.addMouseListener(new MouseListener() {
@@ -137,6 +163,7 @@ public class ControlsPanel implements ActionListener {
                 case JFileChooser.APPROVE_OPTION:
                     File file = fileChooser.getSelectedFile();
                     filePathField.setText(file.getPath());
+                    filePathField.setEditable(false);
                     try {
                         originalBufferedImage = ImageIO.read(file);
                         originalBufferedImage = imageCanvas.scaleImage(originalBufferedImage);
@@ -188,6 +215,42 @@ public class ControlsPanel implements ActionListener {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
+
+        }
+        if (e.getSource() == filePathField) {
+            File file = new File(e.getActionCommand());
+
+            String errorMessage = "";
+
+            if (!file.isFile())
+                errorMessage = "It is not file!!!";
+            else if (file.canRead()) {
+                try {
+                    originalBufferedImage = ImageIO.read(file);
+                    originalBufferedImage = imageCanvas.scaleImage(originalBufferedImage);
+                    imageCanvas.setOriginalBufferedImage(originalBufferedImage);
+                    imageCanvas.repaint();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+
+                filePathField.setEditable(false);
+
+            } else
+                errorMessage = "Can't read file!!!";
+            if (!errorMessage.isEmpty()) {
+                //filePathField.setText("Не является файлом, либо файл невозможно прочитать");
+                JDialog dialog = new JDialog(mainFrame, "Ошибка открытия файла", JDialog.DEFAULT_MODALITY_TYPE);
+                dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                JTextField textArea = new JTextField(errorMessage);
+                textArea.setEditable(false);
+                dialog.setBounds(0, 0, 250, 100);
+                dialog.setLocationRelativeTo(null);
+                dialog.setLayout(new BorderLayout());
+                dialog.add(textArea, BorderLayout.CENTER);
+                dialog.setVisible(true);
+            }
+
 
         }
 
