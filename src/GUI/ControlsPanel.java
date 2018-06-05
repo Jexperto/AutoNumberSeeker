@@ -32,7 +32,7 @@ public class ControlsPanel implements ActionListener {
         openFileButton = new Button("Открыть файл...");
         openFileButton.setBounds(25, 525, 100, 25);
         openFileButton.addActionListener(this);
-        runButton = new Button("Тестировать");
+        runButton = new Button("Распознать");
         runButton.setBounds(540, 525, 100, 25);
         runButton.addActionListener(this);
         filePathField = new JTextField("Путь к файлу...");
@@ -155,7 +155,10 @@ public class ControlsPanel implements ActionListener {
         tesseract = new Tesseract();
         tesseract.setLanguage("leu");
         tesseract.setDatapath(".");
+
         tesseract.setTessVariable("tessedit_char_whitelist", "acekopxyABCEHKMOPTXYD0123456789");
+
+
     }
 
     @Override
@@ -293,15 +296,15 @@ public class ControlsPanel implements ActionListener {
         PointRep(int x, int y) {
             this.x = x;
             this.y = y;
-            setBounds(x - 10, y - 10, 20, 20);
+            setBounds(x - 5, y - 5, 10, 10);
         }
 
         public boolean collis(PointRep pointRep) {
-            return ((pointRep.x - this.x) * (pointRep.x - this.x) + (pointRep.y - this.y) * (pointRep.y - this.y)) < 100;
+            return ((pointRep.x - this.x) * (pointRep.x - this.x) + (pointRep.y - this.y) * (pointRep.y - this.y)) < 25;
         }
 
         boolean collis(int x, int y) {
-            return ((x - this.x) * (x - this.x) + (y - this.y) * (y - this.y)) < 100;
+            return ((x - this.x) * (x - this.x) + (y - this.y) * (y - this.y)) < 25;
         }
 
         @Override
@@ -309,7 +312,7 @@ public class ControlsPanel implements ActionListener {
             super.paintComponent(g);
             System.out.println("drawing");
             g.setColor(Color.GREEN);
-            g.fillOval(0, 0, 20, 20);
+            g.fillOval(0, 0, 10, 10);
         }
     }
 }
