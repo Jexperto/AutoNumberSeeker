@@ -153,7 +153,7 @@ public class ControlsPanel implements ActionListener {
         mainFrame.add(runButton);
         mainFrame.add(imageCanvas);
         tesseract = new Tesseract();
-        tesseract.setLanguage("eng");
+        tesseract.setLanguage("leu");
         tesseract.setDatapath(".");
     }
 
@@ -219,6 +219,7 @@ public class ControlsPanel implements ActionListener {
                 BufferedImage subImage = originalBufferedImage.getSubimage(x, y, w, h);
 
                 res = Processor.contrastProcessor(subImage);
+                res = Processor.reversProcessor(res);
                 //res = subImage;
 
             } else
@@ -264,15 +265,7 @@ public class ControlsPanel implements ActionListener {
                 errorMessage = "Can't read file!!!";
             if (!errorMessage.isEmpty()) {
                 //filePathField.setText("Не является файлом, либо файл невозможно прочитать");
-                JDialog dialog = new JDialog(mainFrame, "Ошибка открытия файла", JDialog.DEFAULT_MODALITY_TYPE);
-                dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                JTextField textArea = new JTextField(errorMessage);
-                textArea.setEditable(false);
-                dialog.setBounds(0, 0, 250, 100);
-                dialog.setLocationRelativeTo(null);
-                dialog.setLayout(new BorderLayout());
-                dialog.add(textArea, BorderLayout.CENTER);
-                dialog.setVisible(true);
+                showErrorDialog(errorMessage);
             }
 
 
@@ -282,7 +275,15 @@ public class ControlsPanel implements ActionListener {
 
     private void showErrorDialog(String errorMessage) {
 
-
+        JDialog dialog = new JDialog(mainFrame, "Ошибка открытия файла", JDialog.DEFAULT_MODALITY_TYPE);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        JTextField textArea = new JTextField(errorMessage);
+        textArea.setEditable(false);
+        dialog.setBounds(0, 0, 250, 100);
+        dialog.setLocationRelativeTo(null);
+        dialog.setLayout(new BorderLayout());
+        dialog.add(textArea, BorderLayout.CENTER);
+        dialog.setVisible(true);
     }
 
     public void close() {

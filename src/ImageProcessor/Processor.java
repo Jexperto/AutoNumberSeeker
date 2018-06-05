@@ -4,8 +4,13 @@ import java.awt.image.BufferedImage;
 
 public class Processor {
 
+    public static int lastBlackCount = 0;
+    public static int lastWhiteCount = 0;
+
     public static BufferedImage contrastProcessor(BufferedImage origImage) {
-        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        lastBlackCount = 0;
+        lastWhiteCount = 0;
         for (int i = 0; i < work.getWidth(); i++) {
             for (int j = 0; j < work.getHeight(); j++) {
                 int color = origImage.getRGB(i, j);
@@ -14,20 +19,46 @@ public class Processor {
                 int green = (color >>> 8) & 0xFF;
                 int blue = color & 0xFF;
 
-                if ((red > 50) && (Math.abs(red - green) < 40) && (Math.abs(red - blue) < 60) && (Math.abs(blue - green) < 40))
-                    color = 0x00FFFFFF;
-
+                if ((red > 50) && (Math.abs(red - green) < 40) && (Math.abs(red - blue) < 60) && (Math.abs(blue - green) < 40)) {
+                    work.setRGB(i, j, 0x00FFFFFF);
+                    lastWhiteCount++;
+                    continue;
+                }
                 //схема цвета: 0xAARRGGBB, где AA - прозрачность (не учитывается), RR - красный, GG - зелёный, BB - синий.
                 //Граничные условия определяют границу разделения цветов на черный и белый.
                 //На данный момент условия закреплены, если для некоторых изображений будут осечки, придётся делать их динамичными.
-                if (((color & 0x00ff0000) < 0x00f00000) && ((color & 0x0000ff00) < 0x0000a000) && ((color & 0x000000ff) < 0x000000f0))
+                if (((color & 0x00ff0000) < 0x00f00000) && ((color & 0x0000ff00) < 0x0000a000) && ((color & 0x000000ff) < 0x000000f0)) {
                     work.setRGB(i, j, 0);
-                else
+                    lastBlackCount++;
+                } else {
                     work.setRGB(i, j, 0x00FFFFFF);
-
+                    lastWhiteCount++;
+                }
             }
         }
         return work;
+    }
+
+    public static BufferedImage reversProcessor(BufferedImage origImage) {
+
+        if (lastBlackCount > lastWhiteCount) {
+
+            BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+
+            for (int i = 0; i < work.getWidth(); i++) {
+                for (int j = 0; j < work.getHeight(); j++) {
+
+                    if (origImage.getRGB(i, j) == -1)
+                        work.setRGB(i, j, 0);
+                    else
+                        work.setRGB(i, j, 0x00FFFFFF);
+                }
+            }
+
+            return work;
+        }
+
+        return origImage;
     }
 
     private BufferedImage getRectangleImage(BufferedImage origImage) {
