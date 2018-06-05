@@ -1,6 +1,9 @@
 package GUI;
 
 import ImageProcessor.Processor;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -23,6 +26,7 @@ public class ControlsPanel implements ActionListener {
     private Main mainFrame;
     private PointRep pointRep1;
     private PointRep pointRep2;
+    private ITesseract tesseract;
 
     ControlsPanel(Main main) {
         openFileButton = new Button("Открыть файл...");
@@ -148,6 +152,9 @@ public class ControlsPanel implements ActionListener {
         mainFrame.add(filePathField);
         mainFrame.add(runButton);
         mainFrame.add(imageCanvas);
+        tesseract = new Tesseract();
+        tesseract.setLanguage("eng");
+        tesseract.setDatapath(".");
     }
 
     @Override
@@ -165,6 +172,14 @@ public class ControlsPanel implements ActionListener {
                     filePathField.setText(file.getPath());
                     filePathField.setEditable(false);
                     try {
+
+                        if (pointRep1 != null && pointRep2 != null) {
+                            imageCanvas.remove(pointRep1);
+                            imageCanvas.remove(pointRep2);
+                            pointRep1 = null;
+                            pointRep2 = null;
+                        }
+
                         originalBufferedImage = ImageIO.read(file);
                         originalBufferedImage = imageCanvas.scaleImage(originalBufferedImage);
                         imageCanvas.setOriginalBufferedImage(originalBufferedImage);
@@ -198,21 +213,30 @@ public class ControlsPanel implements ActionListener {
                 pointRep1 = null;
                 pointRep2 = null;
 
+                imageCanvas.setOriginalBufferedImage(originalBufferedImage);
+                imageCanvas.repaint();
+
                 BufferedImage subImage = originalBufferedImage.getSubimage(x, y, w, h);
 
                 res = Processor.contrastProcessor(subImage);
+                //res = subImage;
 
             } else
                 res = Processor.contrastProcessor(originalBufferedImage);
 
             try {
-                imageCanvas.setOriginalBufferedImage(res);
-                imageCanvas.repaint();
+//                imageCanvas.setOriginalBufferedImage(res);
+//                imageCanvas.repaint();
                 System.out.println("Saving as testRes.png...");
                 ImageIO.write(res, "png", new File("testRes.png"));
+
+                System.out.println("Testing tess...");
+
+                System.out.println(tesseract.doOCR(res));
+
                 System.out.println("Done.");
 
-            } catch (IOException e1) {
+            } catch (IOException | TesseractException e1) {
                 e1.printStackTrace();
             }
 
@@ -231,7 +255,7 @@ public class ControlsPanel implements ActionListener {
                     imageCanvas.setOriginalBufferedImage(originalBufferedImage);
                     imageCanvas.repaint();
                 } catch (IOException e1) {
-                    e1.printStackTrace();
+                    errorMessage = "It is not image!";
                 }
 
                 filePathField.setEditable(false);
@@ -253,6 +277,11 @@ public class ControlsPanel implements ActionListener {
 
 
         }
+
+    }
+
+    private void showErrorDialog(String errorMessage) {
+
 
     }
 
