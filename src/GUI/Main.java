@@ -76,8 +76,9 @@ public class Main extends JFrame {
     public static void initTessdata() {
 
         File file = new File("tessdata");
-        if (!file.exists() || !file.isDirectory()) {
+        if (!file.exists() || !file.isDirectory())
             file.mkdir();
+        if (!(new File("tessdata\\leu.traineddata").exists())) {
             try {
                 JarFile jarFile = new JarFile(new File("AutoNumberSeeker.jar"));
                 JarEntry jarEntry = new JarEntry("tessdata/lau.traineddata");

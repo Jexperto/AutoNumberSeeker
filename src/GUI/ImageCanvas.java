@@ -7,7 +7,6 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 
 
-// Да, я делаю форму не через конструктор, потому что он убогий. Как говорил Андрей: "Можете лучше - делайте".
 public class ImageCanvas extends JPanel {
 
     private BufferedImage originalBufferedImage;
