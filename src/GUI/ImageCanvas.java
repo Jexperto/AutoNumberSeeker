@@ -13,26 +13,28 @@ public class ImageCanvas extends JPanel {
     private final int WIDTH = 800;
     private final int HEIGHT = 500;
 
-    ImageCanvas(/*BufferedImage originalBufferedImage*/) {
-//        this.originalBufferedImage = originalBufferedImage;
+    ImageCanvas() {
         setBounds(0, 0, WIDTH, HEIGHT);
-//        repaint();
-
     }
 
-
+    //Перерисовка компонента
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        //g2d.drawImage(originalBufferedImage.getScaledInstance(600,200,Image.SCALE_DEFAULT),0,0, (img, infoflags, x, y, width, height) -> false);
-        g.drawImage(originalBufferedImage, 0, 0, (img, infoflags, x, y, width, height) -> false);
+        if (originalBufferedImage != null)
+            g.drawImage(originalBufferedImage, 0, 0, (img, infoflags, x, y, width, height) -> false);
     }
 
-    public void setOriginalBufferedImage(BufferedImage originalBufferedImage) {
+    //Установка изображения для отрисовки
+    void setOriginalBufferedImage(BufferedImage originalBufferedImage) {
         this.originalBufferedImage = originalBufferedImage;
-        setBounds(0, 0, originalBufferedImage.getWidth(), originalBufferedImage.getHeight());
+        if (originalBufferedImage != null)
+            setBounds(0, 0, originalBufferedImage.getWidth(), originalBufferedImage.getHeight());
+        else
+            setBounds(0, 0, WIDTH, HEIGHT);
     }
 
-    public BufferedImage scaleImage(BufferedImage originalBufferedImage) {
+    //Маштабирование изображения по размерам области отрисовки
+    BufferedImage scaleImage(BufferedImage originalBufferedImage) {
         if (originalBufferedImage == null) {
             return null;
         }
@@ -46,16 +48,16 @@ public class ImageCanvas extends JPanel {
         at.scale(scaleMag, scaleMag);
         AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
         scaledBufferedImage = scaleOp.filter(originalBufferedImage, scaledBufferedImage);
+        //Афф преобразования не меняют фактический размер, поэтому выполняется вырезание области
         return scaledBufferedImage.getSubimage(0, 0, (int) (w * scaleMag), (int) (h * scaleMag));
 
     }
 
-    public double scaleMagnitude(BufferedImage originalBufferedImage) {
+    //Вычисление коэффициента маштабирования. Если не нужно, вернёт -1
+    private double scaleMagnitude(BufferedImage originalBufferedImage) {
         if (originalBufferedImage.getHeight() < HEIGHT && originalBufferedImage.getWidth() < WIDTH)
             return -1;
-//           return originalBufferedImage.getWidth() > originalBufferedImage.getHeight() ? (double) WIDTH / originalBufferedImage.getWidth() : (double) HEIGHT / originalBufferedImage.getHeight();
         return Math.min((double) WIDTH / originalBufferedImage.getWidth(), (double) HEIGHT / originalBufferedImage.getHeight());
-
     }
 
 
