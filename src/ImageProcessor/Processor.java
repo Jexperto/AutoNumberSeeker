@@ -42,30 +42,24 @@ public class Processor {
         return work;
     }
 
-    //Инферсия изображения: черный -> белый, белый -> черный. Работает только после контраста. На данный момент отключён за неэффективностью.
+    //Инверсия изображения: черный -> белый, белый -> черный. Работает только после контраста.
     public static BufferedImage reversProcessor(BufferedImage origImage) {
+        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), origImage.getType());
 
-        if (lastBlackCount > lastWhiteCount) {
+        int width = work.getWidth();
+        int height = work.getHeight();
 
-            BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), origImage.getType());
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
 
-            int width = work.getWidth();
-            int height = work.getHeight();
-
-            for (int i = 0; i < width; i++) {
-                for (int j = 0; j < height; j++) {
-
-                    if ((origImage.getRGB(i, j) & 0x00FFFFFF) == 0x00FFFFFF)
-                        work.setRGB(i, j, 0);
-                    else
-                        work.setRGB(i, j, 0x00FFFFFF);
-                }
+                if ((origImage.getRGB(i, j) & 0x00FFFFFF) == 0x00FFFFFF)
+                    work.setRGB(i, j, 0);
+                else
+                    work.setRGB(i, j, 0x00FFFFFF);
             }
-
-            return work;
         }
 
-        return origImage;
+        return work;
     }
 
     //Линейный процессор (название осталось от первой попытки), обрабатывает изображение и удаляет всё, что не похоже на символы.

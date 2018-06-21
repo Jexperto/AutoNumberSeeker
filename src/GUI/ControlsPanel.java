@@ -196,11 +196,17 @@ public class ControlsPanel implements ActionListener {
             } else
                 res = Processor.contrastProcessor(originalBufferedImage);
 
-            res = Processor.linearProcessor(res);
+            BufferedImage res2 = Processor.linearProcessor(res);
 
             try {
 
-                String result = tesseract.doOCR(res).trim().replace(" ", "");
+                String result = tesseract.doOCR(res2).trim().replace(" ", "");
+
+                if (result.replace("\n", "").isEmpty()) {
+                    res = Processor.reversProcessor(res);
+                    res = Processor.linearProcessor(res);
+                    result = tesseract.doOCR(res).trim().replace(" ", "");
+                }
 
                 System.out.println(result);
                 showDialog("Результат распознавания", result);

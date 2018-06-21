@@ -50,7 +50,6 @@ public class ImageCanvas extends JPanel {
         scaledBufferedImage = scaleOp.filter(originalBufferedImage, scaledBufferedImage);
         //Афф преобразования не меняют фактический размер, поэтому выполняется вырезание области
         return scaledBufferedImage.getSubimage(0, 0, (int) (w * scaleMag), (int) (h * scaleMag));
-
     }
 
     //Вычисление коэффициента маштабирования. Если не нужно, вернёт -1
