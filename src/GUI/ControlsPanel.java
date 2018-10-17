@@ -260,39 +260,28 @@ public class ControlsPanel implements ActionListener {
             } else
                 res = originalBufferedImage;
 
-
-            int splitW = res.getWidth() > 100 ? 100 : res.getWidth();
-            int splitH = res.getHeight() > 100 ? 100 : res.getHeight();
-
-            for (int i = 0; i <= res.getWidth() / splitW; i++) {
-                for (int j = 0; j <= res.getHeight() / splitH; j++) {
-                    Thread thread = new Thread(new Processor.ContrastThread(i * splitW, (i + 1) * splitW, j * splitH, (j + 1) * splitH, res));
-                    thread.start();
-                }
-            }
-            while (!Processor.ContrastThread.threadsStoped()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ignored) {
-                }
-            }
+            res = Processor.contrastProcessor(res);
+            System.out.println("contrast done");
 
             try {
                 ImageIO.write(res, "jpeg", new File("temp.jpg"));
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-
-            BufferedImage res2 = Processor.linearProcessor(res);
-
+            BufferedImage res2 = Processor.repairProcessor(res);
+            System.out.println("repair done");
+            ;
+            res2 = Processor.linearProcessor(res2);
             try {
 
                 String result = tesseract.doOCR(res2).trim().replace(" ", "");
 
                 if (result.replace("\n", "").isEmpty()) {
-                    res = Processor.reversProcessor(res);
-                    res = Processor.linearProcessor(res);
-                    result = tesseract.doOCR(res).trim().replace(" ", "");
+
+                    res = Processor.inversionProcessor(res);
+                    res2 = Processor.repairProcessor(res);
+                    res2 = Processor.linearProcessor(res2);
+                    result = tesseract.doOCR(res2).trim().replace(" ", "");
                 }
 
                 System.out.println(result);
