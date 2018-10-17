@@ -9,6 +9,12 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -16,6 +22,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.TooManyListenersException;
 
 public class ControlsPanel implements ActionListener {
 
@@ -125,6 +133,65 @@ public class ControlsPanel implements ActionListener {
         mainFrame.add(filePathField);
         mainFrame.add(runButton);
         mainFrame.add(imageCanvas);
+
+        mainFrame.setDropTarget(new DropTarget());
+        mainFrame.getDropTarget().setActive(true);
+        try {
+            mainFrame.getDropTarget().addDropTargetListener(new DropTargetAdapter() {
+                @SuppressWarnings("unchecked")
+                @Override
+                public void drop(DropTargetDropEvent dtde) {
+
+                    Transferable transferable = dtde.getTransferable();
+
+                    if (transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                        try {
+
+                            Object object = transferable.getTransferData(DataFlavor.javaFileListFlavor);
+
+                            ArrayList<File> files = (ArrayList<File>) object;
+
+                            filePathField.setText(files.get(0).getName());
+                            filePathField.setActionCommand(files.get(0).getName());
+
+                        } catch (UnsupportedFlavorException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
+            });
+        } catch (TooManyListenersException ignored) {
+
+        }
+        mainFrame.setTransferHandler(new TransferHandler(null) {
+            @SuppressWarnings("unchecked")
+            @Override
+            public boolean importData(TransferSupport support) {
+
+
+                Transferable transferable = support.getTransferable();
+
+                if (transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                    try {
+
+                        Object object = transferable.getTransferData(DataFlavor.javaFileListFlavor);
+
+                        ArrayList<File> files = (ArrayList<File>) object;
+
+                        filePathField.setText(files.get(0).getName());
+                        filePathField.setActionCommand(files.get(0).getName());
+
+                    } catch (UnsupportedFlavorException | IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                return super.importData(support);
+            }
+        });
+
+
         tesseract = new Tesseract();
         tesseract.setLanguage("leu");
         tesseract.setDatapath(".");
@@ -189,12 +256,32 @@ public class ControlsPanel implements ActionListener {
                 imageCanvas.setOriginalBufferedImage(originalBufferedImage);
                 imageCanvas.repaint();
 
-                BufferedImage subImage = originalBufferedImage.getSubimage(x, y, w, h);
-
-                res = Processor.contrastProcessor(subImage);
-
+                res = originalBufferedImage.getSubimage(x, y, w, h);
             } else
-                res = Processor.contrastProcessor(originalBufferedImage);
+                res = originalBufferedImage;
+
+
+            int splitW = res.getWidth() > 100 ? 100 : res.getWidth();
+            int splitH = res.getHeight() > 100 ? 100 : res.getHeight();
+
+            for (int i = 0; i <= res.getWidth() / splitW; i++) {
+                for (int j = 0; j <= res.getHeight() / splitH; j++) {
+                    Thread thread = new Thread(new Processor.ContrastThread(i * splitW, (i + 1) * splitW, j * splitH, (j + 1) * splitH, res));
+                    thread.start();
+                }
+            }
+            while (!Processor.ContrastThread.threadsStoped()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {
+                }
+            }
+
+            try {
+                ImageIO.write(res, "jpeg", new File("temp.jpg"));
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
 
             BufferedImage res2 = Processor.linearProcessor(res);
 

@@ -1,65 +1,139 @@
 package ImageProcessor;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class Processor {
 
-    private static int lastBlackCount = 0;
-    private static int lastWhiteCount = 0;
-
     //Контраст. Преобразует цветное изображение в чёрно-белый формат.
     public static BufferedImage contrastProcessor(BufferedImage origImage) {
-        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), origImage.getType());
-        lastBlackCount = 0;
-        lastWhiteCount = 0;
+        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        work.setData(origImage.getData());
         int width = work.getWidth();
         int height = work.getHeight();
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
+        contrastProcessorDontCreate(work, 0, 0, width, height);
+        return work;
+    }
+
+    private static void contrastProcessorDontCreate(BufferedImage origImage, int startW, int startH, int width, int height) {
+
+        startH = startH < 0 ? 0 : startH;
+        startW = startW < 0 ? 0 : startW;
+        width = width > origImage.getWidth() ? origImage.getWidth() : width;
+        height = height > origImage.getHeight() ? origImage.getHeight() : height;
+
+        for (int i = startW; i < width; i++) {
+            for (int j = startH; j < height; j++) {
                 int color = origImage.getRGB(i, j) & 0x00FFFFFF;
 
                 int red = (color >>> 16) & 0xFF;
                 int green = (color >>> 8) & 0xFF;
                 int blue = color & 0xFF;
 
-                if ((red > 50) && (Math.abs(red - green) < 40) && (Math.abs(red - blue) < 60) && (Math.abs(blue - green) < 40)) {
-                    work.setRGB(i, j, 0x00FFFFFF);
-                    lastWhiteCount++;
+                int level = 30;
+                int line = 100;
+                //Gray to white or black by split-line. Level - gray out step
+                if ((red < line) && (Math.abs(red - green) < level) && (Math.abs(red - blue) < level) && (Math.abs(blue - green) < level)) {
+                    origImage.setRGB(i, j, 0x00000000);
+                    continue;
+                } else if ((Math.abs(red - green) < level) && (Math.abs(red - blue) < level) && (Math.abs(blue - green) < level)) {
+                    origImage.setRGB(i, j, 0x00FFFFFF);
                     continue;
                 }
+                //Yellow to white
+                if ((Math.abs(red - green) < 80) && (Math.abs(red - blue) > 45) && (Math.abs(blue - green) > 45)) {
+                    origImage.setRGB(i, j, 0x00FFFFFF);
+                    continue;
+                }
+                //Red to black
+                if ((Math.abs(red - green) > 80) && (Math.abs(red - blue) > 80) && (Math.abs(blue - green) < 30)) {
+                    origImage.setRGB(i, j, 0x00000000);
+                    continue;
+                }
+                //Blue to black
+                if ((Math.abs(red - green) > 80) && (Math.abs(red - blue) > 80) && (Math.abs(blue - green) > 30)) {
+                    origImage.setRGB(i, j, 0x00000000);
+                    continue;
+                }
+
+                origImage.setRGB(i, j, 0x00000000);
+
                 //схема цвета: 0xAARRGGBB, где AA - прозрачность (не учитывается), RR - красный, GG - зелёный, BB - синий.
                 //Граничные условия определяют границу разделения цветов на черный и белый.
                 //На данный момент условия закреплены, если для некоторых изображений будут осечки, придётся делать их динамичными.
-                if (((color & 0x00ff0000) < 0x00f00000) && ((color & 0x0000ff00) < 0x0000a000) && ((color & 0x000000ff) < 0x000000f0)) {
-                    work.setRGB(i, j, 0);
-                    lastBlackCount++;
-                } else {
-                    work.setRGB(i, j, 0x00FFFFFF);
-                    lastWhiteCount++;
-                }
             }
         }
+    }
+
+    //Восстановление битых пикселей. То есть, заполнение черным тех пикселей, которые имеют от трёх закрашенных соседов.
+    public static BufferedImage repairPixelsProcessor(BufferedImage origImage) {
+        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        work.setData(origImage.getData());
+        int width = work.getWidth();
+        int height = work.getHeight();
+        repairPixelsProcessorDontCreate(work, 0, 0, width, height);
         return work;
     }
 
-    //Инверсия изображения: черный -> белый, белый -> черный. Работает только после контраста.
-    public static BufferedImage reversProcessor(BufferedImage origImage) {
-        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), origImage.getType());
+    private static void repairPixelsProcessorDontCreate(BufferedImage origImage, int startW, int startH, int width, int height) {
 
+        startH = startH < 0 ? 0 : startH;
+        startW = startW < 0 ? 0 : startW;
+        width = width > origImage.getWidth() ? origImage.getWidth() : width;
+        height = height > origImage.getHeight() ? origImage.getHeight() : height;
+
+        //восстановление "битых" пикселей
+        boolean repeat;
+        do {
+            repeat = false;
+            for (int i = startH; i <= height; i++) {
+                for (int j = startW; j <= width; j++) {
+                    if ((origImage.getRGB(j, i) & 0x00FFFFFF) == 0x00FFFFFF) {
+                        int count = 0;
+                        if (i > 0 && (origImage.getRGB(j, i - 1) & 0x00FFFFFF) == 0)
+                            count++;
+                        if (i < height - 1 && (origImage.getRGB(j, i + 1) & 0x00FFFFFF) == 0)
+                            count++;
+                        if (j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) == 0)
+                            count++;
+                        if (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) == 0)
+                            count++;
+                        if (count > 2) {
+                            origImage.setRGB(j, i, 0x00000000);
+                            repeat = true;
+                        }
+                    }
+                }
+            }
+        } while (repeat);
+    }
+
+    //Инверсия изображения: черный -> белый, белый -> черный. Работает только после контраста.
+    public static BufferedImage inversionProcessor(BufferedImage origImage) {
+        BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        work.setData(origImage.getData());
         int width = work.getWidth();
         int height = work.getHeight();
+        inversionProcessorDontCreate(work, 0, 0, width, height);
+        return work;
+    }
 
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
+    private static void inversionProcessorDontCreate(BufferedImage origImage, int startW, int startH, int width, int height) {
+
+        startH = startH < 0 ? 0 : startH;
+        startW = startW < 0 ? 0 : startW;
+        width = width > origImage.getWidth() ? origImage.getWidth() : width;
+        height = height > origImage.getHeight() ? origImage.getHeight() : height;
+
+        for (int i = startW; i <= width; i++) {
+            for (int j = startH; j <= height; j++) {
 
                 if ((origImage.getRGB(i, j) & 0x00FFFFFF) == 0x00FFFFFF)
-                    work.setRGB(i, j, 0);
+                    origImage.setRGB(i, j, 0);
                 else
-                    work.setRGB(i, j, 0x00FFFFFF);
+                    origImage.setRGB(i, j, 0x00FFFFFF);
             }
         }
-
-        return work;
     }
 
     //Линейный процессор (название осталось от первой попытки), обрабатывает изображение и удаляет всё, что не похоже на символы.
@@ -74,31 +148,6 @@ public class Processor {
         //Проверенные точки
         boolean[][] checkedPoint = new boolean[height][width];
 
-        boolean repeat;
-
-        //восстановление "битых" пикселей
-        do {
-            repeat = false;
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    if ((work.getRGB(j, i) & 0x00FFFFFF) == 0x00FFFFFF) {
-                        int count = 0;
-                        if (i > 0 && (work.getRGB(j, i - 1) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (i < height - 1 && (work.getRGB(j, i + 1) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (j > 0 && (work.getRGB(j - 1, i) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (j < width - 1 && (work.getRGB(j + 1, i) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (count > 2) {
-                            work.setRGB(j, i, 0x00000000);
-                            repeat = true;
-                        }
-                    }
-                }
-            }
-        } while (repeat);
 
         //Зонированная обработка
         for (int i = 0; i < height; i++) {
@@ -298,6 +347,93 @@ public class Processor {
             }
         }
         return work;
+    }
+
+    public static class ContrastThread implements Runnable {
+
+        private static ArrayList<Boolean> contrastThreadWorks = new ArrayList<>();
+        private int w1;
+        private int w2;
+        private int h1;
+        private int h2;
+        private BufferedImage image;
+
+        public ContrastThread(int w1, int w2, int h1, int h2, BufferedImage image) {
+            this.w1 = w1;
+            this.w2 = w2;
+            this.h1 = h1;
+            this.h2 = h2;
+            this.image = image;
+        }
+
+        public static boolean threadsStoped() {
+            return contrastThreadWorks.size() == 0;
+        }
+
+        @Override
+        public void run() {
+            contrastThreadWorks.add(true);
+            contrastProcessorDontCreate(image, w1, h1, w2, h2);
+            contrastThreadWorks.remove(contrastThreadWorks.size() - 1);
+        }
+    }
+
+    public static class RepairPixelsThread implements Runnable {
+
+        private static ArrayList<Boolean> RepairPixelsThreadWorks = new ArrayList<>();
+        private int w1;
+        private int w2;
+        private int h1;
+        private int h2;
+        private BufferedImage image;
+
+        public RepairPixelsThread(int w1, int w2, int h1, int h2, BufferedImage image) {
+            this.w1 = w1;
+            this.w2 = w2;
+            this.h1 = h1;
+            this.h2 = h2;
+            this.image = image;
+        }
+
+        public static boolean threadsStoped() {
+            return RepairPixelsThreadWorks.size() == 0;
+        }
+
+        @Override
+        public void run() {
+            RepairPixelsThreadWorks.add(true);
+            repairPixelsProcessorDontCreate(image, w1 - 2, h1 - 2, w2 + 2, h2 + 2);
+            RepairPixelsThreadWorks.remove(RepairPixelsThreadWorks.size() - 1);
+        }
+    }
+
+    public static class InversionThread implements Runnable {
+
+        private static ArrayList<Boolean> InversionThreadWorks = new ArrayList<>();
+        private int w1;
+        private int w2;
+        private int h1;
+        private int h2;
+        private BufferedImage image;
+
+        public InversionThread(int w1, int w2, int h1, int h2, BufferedImage image) {
+            this.w1 = w1;
+            this.w2 = w2;
+            this.h1 = h1;
+            this.h2 = h2;
+            this.image = image;
+        }
+
+        public static boolean threadsStoped() {
+            return InversionThreadWorks.size() == 0;
+        }
+
+        @Override
+        public void run() {
+            InversionThreadWorks.add(true);
+            inversionProcessorDontCreate(image, w1, h1, w2, h2);
+            InversionThreadWorks.remove(InversionThreadWorks.size() - 1);
+        }
     }
 
 }
