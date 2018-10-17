@@ -260,14 +260,15 @@ public class ControlsPanel implements ActionListener {
             } else
                 res = originalBufferedImage;
 
+            Processor.testMethod2(res);
             res = Processor.contrastProcessor(res);
-            System.out.println("contrast done");
-
+            Processor.testMethod(res);
             try {
                 ImageIO.write(res, "jpeg", new File("temp.jpg"));
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
+            System.out.println("contrast done");
             BufferedImage res2 = Processor.repairProcessor(res);
             System.out.println("repair done");
             ;

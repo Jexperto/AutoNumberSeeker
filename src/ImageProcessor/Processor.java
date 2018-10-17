@@ -1,13 +1,15 @@
 package ImageProcessor;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class Processor {
 
     //Контраст. Преобразует цветное изображение в чёрно-белый формат.
     public static BufferedImage contrastProcessor(BufferedImage origImage) {
         BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-        work.setData(origImage.getData());
         int width = work.getWidth();
         int height = work.getHeight();
         for (int i = 0; i < width; i++) {
@@ -18,9 +20,9 @@ public class Processor {
                 int green = (color >>> 8) & 0xFF;
                 int blue = color & 0xFF;
 
-                int level = 30;
+                int level = 31;
                 int line = 100;
-
+                //Gray to white or black by split-line. Level - gray out step
                 if ((red < line) && (Math.abs(red - green) < level) && (Math.abs(red - blue) < level) && (Math.abs(blue - green) < level)) {
                     work.setRGB(i, j, 0x00000000);
                     continue;
@@ -28,17 +30,17 @@ public class Processor {
                     work.setRGB(i, j, 0x00FFFFFF);
                     continue;
                 }
-
+                //Yellow to white
                 if ((Math.abs(red - green) < 80) && (Math.abs(red - blue) > 45) && (Math.abs(blue - green) > 45)) {
                     work.setRGB(i, j, 0x00FFFFFF);
                     continue;
                 }
-
+                //Red to black
                 if ((Math.abs(red - green) > 80) && (Math.abs(red - blue) > 80) && (Math.abs(blue - green) < 30)) {
                     work.setRGB(i, j, 0x00000000);
                     continue;
                 }
-
+                //Blue to black
                 if ((Math.abs(red - green) > 80) && (Math.abs(red - blue) > 80) && (Math.abs(blue - green) > 30)) {
                     work.setRGB(i, j, 0x00000000);
                     continue;
@@ -55,6 +57,121 @@ public class Processor {
     }
 
     //Здесь должна быть функция нахождения прямоугольника.
+    public static void testMethod(BufferedImage origImage) {
+
+        int height = origImage.getHeight();
+        int width = origImage.getWidth();
+
+        boolean[][] map = new boolean[height][width];
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if ((origImage.getRGB(j, i) & 0x00FFFFFF) != 0)
+                    continue;
+                /*if ((i > 0 && (origImage.getRGB(j, i - 1) & 0x00FFFFFF) != 0) || (i < height - 1 && (origImage.getRGB(j, i + 1) & 0x00FFFFFF) != 0))
+                    if ((j == 0 || (origImage.getRGB(j - 1, i) & 0x00FFFFFF) == 0) && (j == width - 1 || (origImage.getRGB(j + 1, i) & 0x00FFFFFF) == 0)) {
+                        map[i][j] = true;
+                        continue;
+                    }
+                if ((j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) != 0) || (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) != 0))
+                    if ((i == 0 || (origImage.getRGB(j, i - 1) & 0x00FFFFFF) == 0) && (i == height - 1 || (origImage.getRGB(j, i + 1) & 0x00FFFFFF) == 0))
+                        map[i][j] = true;*/
+                if ((i > 0 && (origImage.getRGB(j, i - 1) & 0x00FFFFFF) != 0) || (i < height - 1 && (origImage.getRGB(j, i + 1) & 0x00FFFFFF) != 0)
+                        || (j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) != 0) || (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) != 0))
+                    map[i][j] = true;
+            }
+        }
+
+        BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                newImage.setRGB(j, i, map[i][j] ? 0 : 0x00FFFFFF);
+            }
+        }
+        try {
+            ImageIO.write(newImage, "jpeg", new File("test.jpg"));
+        } catch (IOException ignored) {
+        }
+    }
+
+    public static void testMethod2(BufferedImage origImage) {
+
+        int height = origImage.getHeight();
+        int width = origImage.getWidth();
+
+        boolean[][] map = new boolean[height][width];
+        int color;
+        int red;
+        int green;
+        int blue;
+        int red2;
+        int green2;
+        int blue2;
+
+        double level = 50;
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                color = origImage.getRGB(j, i) & 0x00FFFFFF;
+                red = (color >>> 16) & 0xFF;
+                green = (color >>> 8) & 0xFF;
+                blue = color & 0xFF;
+
+                if (i > 0) {
+                    color = origImage.getRGB(j, i - 1) & 0x00FFFFFF;
+                    red2 = (color >>> 16) & 0xFF;
+                    green2 = (color >>> 8) & 0xFF;
+                    blue2 = color & 0xFF;
+                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
+                        map[i][j] = true;
+                        continue;
+                    }
+                }
+                if (i < height - 1) {
+                    color = origImage.getRGB(j, i + 1) & 0x00FFFFFF;
+                    red2 = (color >>> 16) & 0xFF;
+                    green2 = (color >>> 8) & 0xFF;
+                    blue2 = color & 0xFF;
+                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
+                        map[i][j] = true;
+                        continue;
+                    }
+                }
+                if (j > 0) {
+                    color = origImage.getRGB(j - 1, i) & 0x00FFFFFF;
+                    red2 = (color >>> 16) & 0xFF;
+                    green2 = (color >>> 8) & 0xFF;
+                    blue2 = color & 0xFF;
+                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
+                        map[i][j] = true;
+                        continue;
+                    }
+                }
+                if (j < height - 1) {
+                    color = origImage.getRGB(j + 1, i) & 0x00FFFFFF;
+                    red2 = (color >>> 16) & 0xFF;
+                    green2 = (color >>> 8) & 0xFF;
+                    blue2 = color & 0xFF;
+                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
+                        map[i][j] = true;
+                        continue;
+                    }
+                }
+                map[i][j] = false;
+            }
+        }
+
+        BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                newImage.setRGB(j, i, map[i][j] ? 0 : 0x00FFFFFF);
+            }
+        }
+        try {
+            ImageIO.write(newImage, "jpeg", new File("test2.jpg"));
+        } catch (IOException ignored) {
+        }
+    }
 
     //Инверсия изображения: черный -> белый, белый -> черный. Работает только после контраста.
     public static BufferedImage inversionProcessor(BufferedImage origImage) {
