@@ -76,8 +76,7 @@ public class Processor {
                 if ((j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) != 0) || (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) != 0))
                     if ((i == 0 || (origImage.getRGB(j, i - 1) & 0x00FFFFFF) == 0) && (i == height - 1 || (origImage.getRGB(j, i + 1) & 0x00FFFFFF) == 0))
                         map[i][j] = true;*/
-                if ((i > 0 && (origImage.getRGB(j, i - 1) & 0x00FFFFFF) != 0) || (i < height - 1 && (origImage.getRGB(j, i + 1) & 0x00FFFFFF) != 0)
-                        || (j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) != 0) || (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) != 0))
+                if ((i > 0 && (origImage.getRGB(j, i - 1) & 0x00FFFFFF) != 0) || (i < height - 1 && (origImage.getRGB(j, i + 1) & 0x00FFFFFF) != 0) || (j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) != 0) || (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) != 0))
                     map[i][j] = true;
             }
         }
@@ -116,48 +115,45 @@ public class Processor {
                 red = (color >>> 16) & 0xFF;
                 green = (color >>> 8) & 0xFF;
                 blue = color & 0xFF;
-
-                if (i > 0) {
-                    color = origImage.getRGB(j, i - 1) & 0x00FFFFFF;
-                    red2 = (color >>> 16) & 0xFF;
-                    green2 = (color >>> 8) & 0xFF;
-                    blue2 = color & 0xFF;
-                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
-                        map[i][j] = true;
-                        continue;
-                    }
-                }
-                if (i < height - 1) {
-                    color = origImage.getRGB(j, i + 1) & 0x00FFFFFF;
-                    red2 = (color >>> 16) & 0xFF;
-                    green2 = (color >>> 8) & 0xFF;
-                    blue2 = color & 0xFF;
-                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
-                        map[i][j] = true;
-                        continue;
-                    }
-                }
-                if (j > 0) {
-                    color = origImage.getRGB(j - 1, i) & 0x00FFFFFF;
-                    red2 = (color >>> 16) & 0xFF;
-                    green2 = (color >>> 8) & 0xFF;
-                    blue2 = color & 0xFF;
-                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
-                        map[i][j] = true;
-                        continue;
-                    }
-                }
-                if (j < height - 1) {
-                    color = origImage.getRGB(j + 1, i) & 0x00FFFFFF;
-                    red2 = (color >>> 16) & 0xFF;
-                    green2 = (color >>> 8) & 0xFF;
-                    blue2 = color & 0xFF;
-                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
-                        map[i][j] = true;
-                        continue;
-                    }
-                }
                 map[i][j] = false;
+                for (int k = 0; k < 4; k++) {
+                    boolean ok = false;
+                    switch (k) {
+                        case 0:
+                            if (i > 0 && !map[i - 1][j]) {
+                                color = origImage.getRGB(j, i - 1) & 0x00FFFFFF;
+                                ok = true;
+                            }
+                            break;
+                        case 1:
+                            if (i < height - 1 && !map[i + 1][j]) {
+                                color = origImage.getRGB(j, i + 1) & 0x00FFFFFF;
+                                ok = true;
+                            }
+                            break;
+                        case 2:
+                            if (j > 0 && !map[i][j - 1]) {
+                                color = origImage.getRGB(j - 1, i) & 0x00FFFFFF;
+                                ok = true;
+                            }
+                            break;
+                        case 3:
+                            if (j < height - 1 && !map[i][j + 1]) {
+                                color = origImage.getRGB(j + 1, i) & 0x00FFFFFF;
+                                ok = true;
+                            }
+                            break;
+                    }
+                    if (!ok)
+                        continue;
+                    red2 = (color >>> 16) & 0xFF;
+                    green2 = (color >>> 8) & 0xFF;
+                    blue2 = color & 0xFF;
+                    if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
+                        map[i][j] = true;
+                        break;
+                    }
+                }
             }
         }
 
