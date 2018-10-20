@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="600.0" prefWidth="850.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <BorderPane layoutX="310.0" layoutY="50.0" prefHeight="450.0" prefWidth="500.0">
+         <center>
+            <ImageView id="mainImage" fitHeight="450.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+               <image>
+                  <Image url="@../../../samples/test1.jpg" />
+               </image>
+            </ImageView>
+         </center>
+      </BorderPane>
+      <ListView id="imageList" layoutX="30.0" layoutY="50.0" prefHeight="450.0" prefWidth="250.0" />
+      <Button id="loadButton" layoutX="30.0" layoutY="523.0" mnemonicParsing="false" text="Загрузить файлы..." />
+      <Button id="proceedButton" layoutX="194.0" layoutY="523.0" mnemonicParsing="false" text="Обработать">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>
