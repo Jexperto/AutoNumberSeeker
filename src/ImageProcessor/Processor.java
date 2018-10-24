@@ -8,7 +8,7 @@ import java.io.IOException;
 public class Processor {
 
     //Контраст. Преобразует цветное изображение в чёрно-белый формат.
-    public static BufferedImage contrastProcessor(BufferedImage origImage) {
+    public static BufferedImage binaryProcessor(BufferedImage origImage) {
         BufferedImage work = new BufferedImage(origImage.getWidth(), origImage.getHeight(), BufferedImage.TYPE_INT_RGB);
         int width = work.getWidth();
         int height = work.getHeight();
@@ -57,42 +57,6 @@ public class Processor {
     }
 
     //Здесь должна быть функция нахождения прямоугольника.
-    public static void testMethod(BufferedImage origImage) {
-
-        int height = origImage.getHeight();
-        int width = origImage.getWidth();
-
-        boolean[][] map = new boolean[height][width];
-
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                if ((origImage.getRGB(j, i) & 0x00FFFFFF) != 0)
-                    continue;
-                /*if ((i > 0 && (origImage.getRGB(j, i - 1) & 0x00FFFFFF) != 0) || (i < height - 1 && (origImage.getRGB(j, i + 1) & 0x00FFFFFF) != 0))
-                    if ((j == 0 || (origImage.getRGB(j - 1, i) & 0x00FFFFFF) == 0) && (j == width - 1 || (origImage.getRGB(j + 1, i) & 0x00FFFFFF) == 0)) {
-                        map[i][j] = true;
-                        continue;
-                    }
-                if ((j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) != 0) || (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) != 0))
-                    if ((i == 0 || (origImage.getRGB(j, i - 1) & 0x00FFFFFF) == 0) && (i == height - 1 || (origImage.getRGB(j, i + 1) & 0x00FFFFFF) == 0))
-                        map[i][j] = true;*/
-                if ((i > 0 && (origImage.getRGB(j, i - 1) & 0x00FFFFFF) != 0) || (i < height - 1 && (origImage.getRGB(j, i + 1) & 0x00FFFFFF) != 0) || (j > 0 && (origImage.getRGB(j - 1, i) & 0x00FFFFFF) != 0) || (j < width - 1 && (origImage.getRGB(j + 1, i) & 0x00FFFFFF) != 0))
-                    map[i][j] = true;
-            }
-        }
-
-        BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                newImage.setRGB(j, i, map[i][j] ? 0 : 0x00FFFFFF);
-            }
-        }
-        try {
-            ImageIO.write(newImage, "jpeg", new File("test.jpg"));
-        } catch (IOException ignored) {
-        }
-    }
-
     public static void testMethod2(BufferedImage origImage) {
 
         int height = origImage.getHeight();
@@ -107,6 +71,8 @@ public class Processor {
         int green2;
         int blue2;
 
+        boolean[][] checkCFC = new boolean[height][width];
+
         double level = 50;
 
         for (int i = 0; i < height; i++) {
@@ -117,35 +83,35 @@ public class Processor {
                 blue = color & 0xFF;
                 map[i][j] = false;
                 for (int k = 0; k < 4; k++) {
-                    boolean ok = false;
                     switch (k) {
                         case 0:
-                            if (i > 0 && !map[i - 1][j]) {
+                            if (i > 0) {
                                 color = origImage.getRGB(j, i - 1) & 0x00FFFFFF;
-                                ok = true;
                             }
                             break;
                         case 1:
-                            if (i < height - 1 && !map[i + 1][j]) {
+                            if (i < height - 1) {
                                 color = origImage.getRGB(j, i + 1) & 0x00FFFFFF;
-                                ok = true;
                             }
                             break;
                         case 2:
-                            if (j > 0 && !map[i][j - 1]) {
+                            if (j > 0) {
                                 color = origImage.getRGB(j - 1, i) & 0x00FFFFFF;
-                                ok = true;
                             }
                             break;
                         case 3:
-                            if (j < height - 1 && !map[i][j + 1]) {
+                            if (j < height - 1) {
                                 color = origImage.getRGB(j + 1, i) & 0x00FFFFFF;
-                                ok = true;
                             }
                             break;
                     }
-                    if (!ok)
-                        continue;
+                    if (i > 0 && j > 0)
+                        if (map[i - 1][j - 1])
+                            if (map[i - 2][j - 1])
+                                if (map[i][j - 1])
+                                    if (map[i - 1][j - 2])
+                                        if (map[i - 1][j])
+                                            checkCFC[i - 1][j - 1] = true;
                     red2 = (color >>> 16) & 0xFF;
                     green2 = (color >>> 8) & 0xFF;
                     blue2 = color & 0xFF;
@@ -157,6 +123,148 @@ public class Processor {
             }
         }
 
+        for (int i = height - 2; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if (!map[i][j])
+                    continue;
+                if (i > 0 && !map[i - 1][j])
+                    continue;
+                if (i < height - 1 && !map[i + 1][j])
+                    continue;
+                if (j > 0 && !map[i][j - 1])
+                    continue;
+                if (j < width - 1 && !map[i][j + 1])
+                    continue;
+                checkCFC[i][j] = true;
+            }
+        }
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if (!map[i][j] || checkCFC[i][j])
+                    continue;
+                checkCFC[i][j] = true;
+                StringBuilder builder = new StringBuilder();
+                builder.append(i).append(':').append(j).append('=');
+                boolean stop = false;
+                int hStep = 0;
+                int wStep = 0;
+                BufferedImage superImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                for (int ii = 0; ii < height; ii++) {
+                    for (int jj = 0; jj < width; jj++) {
+                        superImage.setRGB(jj, ii, 0x00FFFFFF);
+                    }
+                }
+                superImage.setRGB(j, i, 0);
+                int count = 1;
+                do {
+                    boolean ok = false;
+                    for (int k = 0; k < 8; k++) {
+                        switch (k) {
+                            case 0:
+                                if (i + hStep > 0 && !checkCFC[i - 1 + hStep][j + wStep] && map[i - 1 + hStep][j + wStep]) {
+                                    checkCFC[i - 1 + hStep][j + wStep] = true;
+                                    superImage.setRGB(j + wStep, i - 1 + hStep, 0);
+                                    hStep--;
+                                    builder.append(0).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                            case 1:
+                                if (i + hStep > 0 && j + wStep < width - 1 && !checkCFC[i - 1 + hStep][j + 1 + wStep] && map[i - 1 + hStep][j + 1 + wStep]) {
+                                    checkCFC[i - 1 + hStep][j + 1 + wStep] = true;
+                                    superImage.setRGB(j + 1 + wStep, i - 1 + hStep, 0);
+                                    hStep--;
+                                    wStep++;
+                                    builder.append(1).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                            case 2:
+                                if (j + wStep < width - 1 && !checkCFC[i + hStep][j + 1 + wStep] && map[i + hStep][j + 1 + wStep]) {
+                                    checkCFC[i + hStep][j + 1 + wStep] = true;
+                                    superImage.setRGB(j + 1 + wStep, i + hStep, 0);
+                                    wStep++;
+                                    builder.append(2).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                            case 3:
+                                if (i + hStep < height - 1 && j + wStep < width - 1 && !checkCFC[i + 1 + hStep][j + 1 + wStep] && map[i + 1 + hStep][j + 1 + wStep]) {
+                                    checkCFC[i + 1 + hStep][j + 1 + wStep] = true;
+                                    superImage.setRGB(j + 1 + wStep, i + 1 + hStep, 0);
+                                    hStep++;
+                                    wStep++;
+                                    builder.append(3).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                            case 4:
+                                if (i + hStep < height - 1 && !checkCFC[i + 1 + hStep][j + wStep] && map[i + 1 + hStep][j + wStep]) {
+                                    checkCFC[i + 1 + hStep][j + wStep] = true;
+                                    superImage.setRGB(j + wStep, i + 1 + hStep, 0);
+                                    hStep++;
+                                    builder.append(4).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                            case 5:
+                                if (i + hStep < height - 1 && j + wStep > 0 && !checkCFC[i + 1 + hStep][j - 1 + wStep] && map[i + 1 + hStep][j - 1 + wStep]) {
+                                    checkCFC[i + 1 + hStep][j - 1 + wStep] = true;
+                                    superImage.setRGB(j - 1 + wStep, i + 1 + hStep, 0);
+                                    hStep++;
+                                    wStep--;
+                                    builder.append(5).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                            case 6:
+                                if (j + wStep > 0 && !checkCFC[i + hStep][j - 1 + wStep] && map[i + hStep][j - 1 + wStep]) {
+                                    checkCFC[i + hStep][j - 1 + wStep] = true;
+                                    superImage.setRGB(j - 1 + wStep, i + hStep, 0);
+                                    wStep--;
+                                    builder.append(6).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                            case 7:
+                                if (i + hStep > 0 && j + wStep > 0 && !checkCFC[i - 1 + hStep][j - 1 + wStep] && map[i - 1 + hStep][j - 1 + wStep]) {
+                                    checkCFC[i - 1 + hStep][j - 1 + wStep] = true;
+                                    superImage.setRGB(j - 1 + wStep, i - 1 + hStep, 0);
+                                    hStep--;
+                                    wStep--;
+                                    builder.append(5).append('-');
+                                    ok = true;
+                                    count++;
+                                }
+                                break;
+                        }
+                        if (ok)
+                            break;
+                    }
+                    if (!ok)
+                        stop = true;
+                } while (!stop);
+                if (count > 80) {
+                    System.out.println(builder.toString());
+                    // TODO: 24.10.2018 Здесь в builder'e лежит цепной код Фримена. Необходимо придумать механизм сравнения этого кода с некоторым шаблоном, для определения части или полного прямоугольника.
+                    // Формат кода: i:j=0-0-0-0-0-....
+                    try {
+                        ImageIO.write(repairProcessor(superImage), "jpeg", new File("test2-" + i + "_" + j + ".jpg"));
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+        }
+
+        //for tests
         BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
@@ -164,7 +272,7 @@ public class Processor {
             }
         }
         try {
-            ImageIO.write(newImage, "jpeg", new File("test2.jpg"));
+            ImageIO.write(repairProcessor(newImage), "jpeg", new File("test2.jpg"));
         } catch (IOException ignored) {
         }
     }
@@ -195,30 +303,27 @@ public class Processor {
         work.setData(origImage.getData());
         int width = work.getWidth();
         int height = work.getHeight();
-        boolean repeat;
         //восстановление "битых" пикселей
-        do {
-            repeat = false;
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    if ((work.getRGB(j, i) & 0x00FFFFFF) == 0x00FFFFFF) {
-                        int count = 0;
-                        if (i > 0 && (work.getRGB(j, i - 1) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (i < height - 1 && (work.getRGB(j, i + 1) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (j > 0 && (work.getRGB(j - 1, i) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (j < width - 1 && (work.getRGB(j + 1, i) & 0x00FFFFFF) == 0)
-                            count++;
-                        if (count > 2) {
-                            work.setRGB(j, i, 0x00000000);
-                            repeat = true;
-                        }
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if ((work.getRGB(j, i) & 0x00FFFFFF) == 0x00FFFFFF) {
+                    int count = 0;
+                    if (i > 0 && (work.getRGB(j, i - 1) & 0x00FFFFFF) == 0)
+                        count++;
+                    if (i < height - 1 && (work.getRGB(j, i + 1) & 0x00FFFFFF) == 0)
+                        count++;
+                    if (j > 0 && (work.getRGB(j - 1, i) & 0x00FFFFFF) == 0)
+                        count++;
+                    if (j < width - 1 && (work.getRGB(j + 1, i) & 0x00FFFFFF) == 0)
+                        count++;
+                    if (count > 2) {
+                        work.setRGB(j, i, 0x00000000);
+                        i -= i == 0 ? 0 : 1;
+                        j -= j == 0 ? 1 : 2;
                     }
                 }
             }
-        } while (repeat);
+        }
         return work;
     }
 
