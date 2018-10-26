@@ -19,7 +19,7 @@ public class Main extends JFrame {
 
 
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            setContentPane(FXPanel.createPanel());
+            setContentPane(new FXPanel().createPanel());
             pack();
             setLocationRelativeTo(null);
             setResizable(false);

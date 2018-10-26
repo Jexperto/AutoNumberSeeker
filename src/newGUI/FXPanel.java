@@ -9,13 +9,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
 
 
 public class FXPanel {
 
 
     @SuppressWarnings("unchecked")
-    static JFXPanel createPanel() {
+    JFXPanel createPanel() {
         JFXPanel panel = new JFXPanel();
         try {
             //System.out.println(getClass().getResource("newGUI/newGUI.fxml"));
@@ -26,6 +27,15 @@ public class FXPanel {
             Button proceedButton = (Button) parent.lookup("#proceedButton");
             ImageView mainImage = (ImageView) parent.lookup("mainImage");
 
+
+            //loadButton
+            loadButton.setOnAction(event -> {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Open Resource File");
+                fileChooser.showOpenDialog(null);
+            });
+
+
             //ListView
             ObservableList<String> imagesList = FXCollections.observableArrayList();
             imagesList.add("Image 1");
@@ -34,6 +44,9 @@ public class FXPanel {
             imagesList.add("Image 4");
             imagesList.add("Image 5");
             listView.setItems(imagesList);
+//            listView.setOnMouseClicked(event ->{
+//                listView.getSelectionModel().
+//            });
 
 
 
