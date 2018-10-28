@@ -56,7 +56,7 @@ public class Processor {
         return work;
     }
 
-    //Здесь должна быть функция нахождения прямоугольника.
+    //Алгоритм Андрея, основанный на коде Фримана
     public static void testMethod2(BufferedImage origImage) {
 
         int height = origImage.getHeight();

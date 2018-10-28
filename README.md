@@ -1,5 +1,5 @@
 # AutoNumberSeeker
-This program must seek autonumbers on image. "Must" is a key word.
+This program must seek autonumbers on imageFile. "Must" is a key word.
 
 # Don't worry, be happy:)
 I hope, we can do it...
