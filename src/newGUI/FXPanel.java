@@ -56,6 +56,7 @@ public class FXPanel {
                     borderList.add(image.createBorderPane());
                 }
                 listView.getSelectionModel().select(0);
+                imagesList.get(0).setWhiteColor();
             });
 
             //ListView блок
