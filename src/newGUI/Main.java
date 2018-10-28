@@ -1,26 +1,56 @@
 package newGUI;
 
 
+import javafx.embed.swing.JFXPanel;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class Main extends JFrame {
 
-
     private Main() throws HeadlessException, IOException {
         super("Распознование автомобильных номеров");
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        FXPanel panel = new FXPanel();
+        setContentPane(panel.createPanel());
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                panel.stopListener();
+                e.getWindow().dispose();
+            }
 
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+                System.exit(0);
+            }
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setContentPane(new FXPanel().createPanel());
+            @Override
+            public void windowActivated(WindowEvent e) {
+                super.windowActivated(e);
+                e.getWindow().setIgnoreRepaint(false);
+                panel.startListener();
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+                super.windowDeactivated(e);
+                panel.stopListener();
+                e.getWindow().setIgnoreRepaint(true);
+            }
+
+        });
         pack();
-
         List<BufferedImage> icons = new ArrayList<>();
         icons.add(ImageIO.read(getClass().getResource("../assets/icons/16.png")));
         icons.add(ImageIO.read(getClass().getResource("../assets/icons/32.png")));

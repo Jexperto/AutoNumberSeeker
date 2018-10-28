@@ -20,20 +20,25 @@ import java.util.List;
 
 public class FXPanel {
 
-    int lastIndex;
+    private int lastIndex;
+    private ListView<BorderPane> listView;
+    private Thread listenThread;
+    private ObservableList<ImageData> imagesList;
+    private ImageView mainImageView;
+    private boolean running;
 
     @SuppressWarnings("unchecked")
     JFXPanel createPanel() {
         JFXPanel panel = new JFXPanel();
         try {
-            ObservableList<ImageData> imagesList = FXCollections.observableArrayList();
+            imagesList = FXCollections.observableArrayList();
             ObservableList<BorderPane> borderList = FXCollections.observableArrayList();
             Parent parent = FXMLLoader.load(FXPanel.class.getResource("../assets/fxmls/newGUI.fxml"));
             panel.setScene(new Scene(parent));
-            ListView<BorderPane> listView = (ListView<BorderPane>) parent.lookup("#imageList");
+            listView = (ListView<BorderPane>) parent.lookup("#imageList");
             Button loadButton = (Button) parent.lookup("#loadButton");
             Button proceedButton = (Button) parent.lookup("#proceedButton");
-            ImageView mainImageView = (ImageView) parent.lookup("#mainImage");
+            mainImageView = (ImageView) parent.lookup("#mainImage");
             lastIndex = 0;
 
             listView.setItems(borderList);
@@ -50,22 +55,10 @@ public class FXPanel {
                     imagesList.add(image);
                     borderList.add(image.createBorderPane());
                 }
+                listView.getSelectionModel().select(0);
             });
 
-
-            // Обработка отображения картинки по
-            listView.setOnMousePressed(event -> {
-                int index = listView.getSelectionModel().getSelectedIndex();
-                if (index != -1) {
-                    imagesList.get(lastIndex).setDefaultColor();
-                    ImageData image = imagesList.get(index);
-                    image.setWhiteColor();
-                    mainImageView.setImage(new Image("file:///" + image.getImageFile().getAbsolutePath()));
-                    lastIndex = index;
-                }
-            });
-
-
+            //ListView блок
             //
 
         } catch (Exception e) {
@@ -74,5 +67,35 @@ public class FXPanel {
             System.exit(-1);
         }
         return panel;
+    }
+
+    void startListener() {
+        running = true;
+        listenThread = new Thread(() -> {
+            while (running) {
+                synchronized (listView) {
+                    int index = listView.getSelectionModel().getSelectedIndex();
+                    if (index != -1 && index != lastIndex) {
+                        if (lastIndex != -1)
+                            imagesList.get(lastIndex).setDefaultColor();
+                        ImageData image = imagesList.get(index);
+                        image.setWhiteColor();
+                        mainImageView.setImage(new Image("file:///" + image.getImageFile().getAbsolutePath()));
+                        lastIndex = index;
+                    }
+                }
+                try {
+                    Thread.sleep(2);
+                } catch (InterruptedException e) {
+                    //System.out.println("No comments...");
+                }
+            }
+        });
+        listenThread.start();
+    }
+
+    void stopListener() {
+        running = false;
+        listenThread.interrupt();
     }
 }
