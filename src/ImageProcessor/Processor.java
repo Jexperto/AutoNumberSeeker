@@ -1,9 +1,6 @@
 package ImageProcessor;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
 public class Processor {
 
@@ -57,13 +54,12 @@ public class Processor {
     }
 
     //Алгоритм Андрея, основанный на коде Фримана
-    public static void testMethod2(BufferedImage origImage) {
+    public static BufferedImage testMethod2(BufferedImage origImage) {
 
         int height = origImage.getHeight();
         int width = origImage.getWidth();
 
         boolean[][] map = new boolean[height][width];
-        boolean[][] checkMap = new boolean[height][width];
         int color;
         int red;
         int green;
@@ -82,17 +78,14 @@ public class Processor {
                     if (map[i - 1][j - 1])
                         if (i == 1 || map[i - 2][j - 1])
                             if (map[i][j - 1])
-                                if (j == 2 || map[i - 1][j - 2])
+                                if (j == 1 || map[i - 1][j - 2])
                                     if (map[i - 1][j])
                                         checkCFC[i - 1][j - 1] = true;
-                if (checkMap[i][j])
-                    continue;
                 color = origImage.getRGB(j, i) & 0x00FFFFFF;
                 red = (color >>> 16) & 0xFF;
                 green = (color >>> 8) & 0xFF;
                 blue = color & 0xFF;
                 map[i][j] = false;
-                checkMap[i][j] = true;
                 for (int k = 0; k < 4; k++) {
                     switch (k) {
                         case 0:
@@ -114,7 +107,7 @@ public class Processor {
                                 continue;
                             break;
                         case 3:
-                            if (j < height - 1) {
+                            if (j < width - 1) {
                                 color = origImage.getRGB(j + 1, i) & 0x00FFFFFF;
                             } else
                                 continue;
@@ -125,20 +118,6 @@ public class Processor {
                     blue2 = color & 0xFF;
                     if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
                         map[i][j] = true;
-                        switch (k) {
-                            case 0:
-                                checkMap[i - 1][j] = true;
-                                break;
-                            case 1:
-                                checkMap[i + 1][j] = true;
-                                break;
-                            case 2:
-                                checkMap[i][j - 1] = true;
-                                break;
-                            case 3:
-                                checkMap[i][j + 1] = true;
-                                break;
-                        }
                         break;
                     }
                 }
@@ -274,10 +253,7 @@ public class Processor {
                 newImage.setRGB(j, i, map[i][j] ? 0 : 0x00FFFFFF);
             }
         }
-        try {
-            ImageIO.write(newImage, "jpeg", new File("w" + width + "_h" + height + "_test2.jpg"));
-        } catch (IOException ignored) {
-        }
+        return newImage;
     }
 
     //Инверсия изображения: черный -> белый, белый -> черный. Работает только после контраста.

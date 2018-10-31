@@ -5,6 +5,7 @@ import net.sourceforge.tess4j.ITesseract;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 
 public class ProcessorManager implements Runnable {
 
@@ -31,16 +32,19 @@ public class ProcessorManager implements Runnable {
             if (currentThreads < 4 && index < imageData.size()) {
                 if (imageData.get(index).getImageState() > 1) {
                     countRunThreads--;
-                    index++;
-                    continue;
+                } else {
+                    ProcessorTask task = new ProcessorTask(imageData.get(index));
+                    if (task.start())
+                        currentThreads++;
+                    else
+                        countRunThreads--;
+                    imageData.get(index).requestSetImageState((byte) 1);
                 }
-                ProcessorTask task = new ProcessorTask(imageData.get(index));
-                if (task.start())
-                    currentThreads++;
-                else
-                    countRunThreads--;
-                imageData.get(index).requestSetImageState((byte) 1);
                 index++;
+            }
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ignored) {
             }
         }
         stopSignal.stopped();
@@ -72,16 +76,16 @@ public class ProcessorManager implements Runnable {
             try {
                 BufferedImage image;
                 image = ImageIO.read(imageData.getImageFile());
-                Processor.testMethod2(image);
+                ImageIO.write(Processor.testMethod2(image), "jpg", new File(imageData.getImageFile().getName()));
                 System.out.println("test2 done");
                 BufferedImage res = Processor.binaryProcessor(image);
                 System.out.println("binary done");
-                BufferedImage res2 = Processor.repairProcessor(res);
+                res = Processor.repairProcessor(res);
                 System.out.println("repair done");
-                BufferedImage res3 = Processor.linearProcessor(res2);
+                //res = Processor.linearProcessor(res);
                 System.out.println("linear done");
-                String result = tesseract.doOCR(res3).trim().replace(" ", "");
-                System.out.println(result);
+                String result = " ";//tesseract.doOCR(res).trim().replace(" ", "");
+                //System.out.println(result);
                 if (result.isEmpty())
                     imageData.requestSetImageState((byte) 3);
                 else {
