@@ -1,6 +1,8 @@
 package newGUI;
 
 import ImageProcessor.ImageData;
+import ImageProcessor.ProcessorManager;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.JFXPanel;
@@ -12,20 +14,25 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.FileChooser;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
 
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
-import java.util.List;
 
 
-public class FXPanel {
+class FXPanel {
 
     private int lastIndex;
     private ListView<BorderPane> listView;
-    private Thread listenThread;
+    private Runnable listenThread;
     private ObservableList<ImageData> imagesList;
     private ImageView mainImageView;
     private boolean running;
+    private String lastDirectory;
+    private boolean processorWorking;
+    private ITesseract tesseract;
 
     @SuppressWarnings("unchecked")
     JFXPanel createPanel() {
@@ -39,29 +46,76 @@ public class FXPanel {
             Button loadButton = (Button) parent.lookup("#loadButton");
             Button proceedButton = (Button) parent.lookup("#proceedButton");
             mainImageView = (ImageView) parent.lookup("#mainImage");
-            lastIndex = 0;
+            lastIndex = -1;
 
             listView.setItems(borderList);
 
+            //File chooser
+            lastDirectory = ".";
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Загрузить изображения");
+            fileChooser.setFileFilter(new FileNameExtensionFilter("image files", "png", "gif", "jpg", "jpeg", "bmp"));
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            fileChooser.setMultiSelectionEnabled(true);
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             //loadButton
             loadButton.setOnAction(event -> {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open Resource File");
-                fileChooser.setInitialDirectory(new File("."));
-                List<File> imageFilesList = fileChooser.showOpenMultipleDialog(null);
-                if (imageFilesList == null) return;
+                fileChooser.setCurrentDirectory(new File(lastDirectory));
+                File[] imageFilesList;
+                switch (fileChooser.showOpenDialog(panel)) {
+                    case JFileChooser.APPROVE_OPTION:
+                        imageFilesList = fileChooser.getSelectedFiles();
+                        break;
+                    case JFileChooser.CANCEL_OPTION:
+                        return;
+                    case JFileChooser.ERROR_OPTION:
+                        return;
+                    default:
+                        return;
+                }
+                lastDirectory = imageFilesList[0].getParent();
                 for (File file : imageFilesList) {
                     ImageData image = new ImageData(file);
                     imagesList.add(image);
                     borderList.add(image.createBorderPane());
                 }
-                listView.getSelectionModel().select(0);
-                imagesList.get(0).setWhiteColor();
+                if (lastIndex == -1) {
+                    lastIndex = 0;
+                    listView.getSelectionModel().select(0);
+                    imagesList.get(0).setWhiteColor();
+                    mainImageView.setImage(new Image("file:///" + imagesList.get(0).getImageFile().getAbsolutePath()));
+                }
+                listView.requestFocus();
             });
 
-            //ListView блок
-            //
+            listenThread = () -> {
+                int index = listView.getSelectionModel().getSelectedIndex();
+                if (index != -1 && index != lastIndex) {
+                    if (lastIndex != -1)
+                        imagesList.get(lastIndex).setDefaultColor();
+                    ImageData image = imagesList.get(index);
+                    image.setWhiteColor();
+                    mainImageView.setImage(new Image("file:///" + image.getImageFile().getAbsolutePath()));
+                    lastIndex = index;
+                }
+                if (running)
+                    Platform.runLater(listenThread);
+            };
+            processorWorking = false;
+            proceedButton.setOnAction(event -> {
+                if (!processorWorking) {
+                    ProcessorManager processorManager = new ProcessorManager(FXCollections.observableArrayList(imagesList), tesseract, () -> {
+                        processorWorking = false;
+                        panel.requestFocus();
+                    });
+                    processorWorking = processorManager.start();
+                }
+            });
 
+            tesseract = new Tesseract();
+            tesseract.setLanguage("leu");
+            tesseract.setDatapath(".");
+            tesseract.setTessVariable("tessedit_char_whitelist", "acekopxyABCEHKMOPTXYD0123456789");
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("CRITICAL ERROR: FAIL INIT MAIN FRAME");
@@ -72,31 +126,10 @@ public class FXPanel {
 
     void startListener() {
         running = true;
-        listenThread = new Thread(() -> {
-            while (running) {
-                synchronized (listView) {
-                    int index = listView.getSelectionModel().getSelectedIndex();
-                    if (index != -1 && index != lastIndex) {
-                        if (lastIndex != -1)
-                            imagesList.get(lastIndex).setDefaultColor();
-                        ImageData image = imagesList.get(index);
-                        image.setWhiteColor();
-                        mainImageView.setImage(new Image("file:///" + image.getImageFile().getAbsolutePath()));
-                        lastIndex = index;
-                    }
-                }
-                try {
-                    Thread.sleep(2);
-                } catch (InterruptedException e) {
-                    //System.out.println("No comments...");
-                }
-            }
-        });
-        listenThread.start();
+        Platform.runLater(listenThread);
     }
 
     void stopListener() {
         running = false;
-        listenThread.interrupt();
     }
 }

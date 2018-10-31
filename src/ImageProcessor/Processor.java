@@ -63,6 +63,7 @@ public class Processor {
         int width = origImage.getWidth();
 
         boolean[][] map = new boolean[height][width];
+        boolean[][] checkMap = new boolean[height][width];
         int color;
         int red;
         int green;
@@ -77,46 +78,67 @@ public class Processor {
 
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
+                if (i > 0 && j > 0)
+                    if (map[i - 1][j - 1])
+                        if (i == 1 || map[i - 2][j - 1])
+                            if (map[i][j - 1])
+                                if (j == 2 || map[i - 1][j - 2])
+                                    if (map[i - 1][j])
+                                        checkCFC[i - 1][j - 1] = true;
+                if (checkMap[i][j])
+                    continue;
                 color = origImage.getRGB(j, i) & 0x00FFFFFF;
                 red = (color >>> 16) & 0xFF;
                 green = (color >>> 8) & 0xFF;
                 blue = color & 0xFF;
                 map[i][j] = false;
+                checkMap[i][j] = true;
                 for (int k = 0; k < 4; k++) {
                     switch (k) {
                         case 0:
                             if (i > 0) {
                                 color = origImage.getRGB(j, i - 1) & 0x00FFFFFF;
-                            }
+                            } else
+                                continue;
                             break;
                         case 1:
                             if (i < height - 1) {
                                 color = origImage.getRGB(j, i + 1) & 0x00FFFFFF;
-                            }
+                            } else
+                                continue;
                             break;
                         case 2:
                             if (j > 0) {
                                 color = origImage.getRGB(j - 1, i) & 0x00FFFFFF;
-                            }
+                            } else
+                                continue;
                             break;
                         case 3:
                             if (j < height - 1) {
                                 color = origImage.getRGB(j + 1, i) & 0x00FFFFFF;
-                            }
+                            } else
+                                continue;
                             break;
                     }
-                    if (i > 0 && j > 0)
-                        if (map[i - 1][j - 1])
-                            if (map[i - 2][j - 1])
-                                if (map[i][j - 1])
-                                    if (map[i - 1][j - 2])
-                                        if (map[i - 1][j])
-                                            checkCFC[i - 1][j - 1] = true;
                     red2 = (color >>> 16) & 0xFF;
                     green2 = (color >>> 8) & 0xFF;
                     blue2 = color & 0xFF;
                     if (Math.sqrt(Math.pow(red - red2, 2) + Math.pow(green - green2, 2) + Math.pow(blue - blue2, 2)) > level) {
                         map[i][j] = true;
+                        switch (k) {
+                            case 0:
+                                checkMap[i - 1][j] = true;
+                                break;
+                            case 1:
+                                checkMap[i + 1][j] = true;
+                                break;
+                            case 2:
+                                checkMap[i][j - 1] = true;
+                                break;
+                            case 3:
+                                checkMap[i][j + 1] = true;
+                                break;
+                        }
                         break;
                     }
                 }
@@ -149,13 +171,6 @@ public class Processor {
                 boolean stop = false;
                 int hStep = 0;
                 int wStep = 0;
-                BufferedImage superImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                for (int ii = 0; ii < height; ii++) {
-                    for (int jj = 0; jj < width; jj++) {
-                        superImage.setRGB(jj, ii, 0x00FFFFFF);
-                    }
-                }
-                superImage.setRGB(j, i, 0);
                 int count = 1;
                 do {
                     boolean ok = false;
@@ -164,7 +179,6 @@ public class Processor {
                             case 0:
                                 if (i + hStep > 0 && !checkCFC[i - 1 + hStep][j + wStep] && map[i - 1 + hStep][j + wStep]) {
                                     checkCFC[i - 1 + hStep][j + wStep] = true;
-                                    superImage.setRGB(j + wStep, i - 1 + hStep, 0);
                                     hStep--;
                                     builder.append(0).append('-');
                                     ok = true;
@@ -174,7 +188,6 @@ public class Processor {
                             case 1:
                                 if (i + hStep > 0 && j + wStep < width - 1 && !checkCFC[i - 1 + hStep][j + 1 + wStep] && map[i - 1 + hStep][j + 1 + wStep]) {
                                     checkCFC[i - 1 + hStep][j + 1 + wStep] = true;
-                                    superImage.setRGB(j + 1 + wStep, i - 1 + hStep, 0);
                                     hStep--;
                                     wStep++;
                                     builder.append(1).append('-');
@@ -185,7 +198,6 @@ public class Processor {
                             case 2:
                                 if (j + wStep < width - 1 && !checkCFC[i + hStep][j + 1 + wStep] && map[i + hStep][j + 1 + wStep]) {
                                     checkCFC[i + hStep][j + 1 + wStep] = true;
-                                    superImage.setRGB(j + 1 + wStep, i + hStep, 0);
                                     wStep++;
                                     builder.append(2).append('-');
                                     ok = true;
@@ -195,7 +207,6 @@ public class Processor {
                             case 3:
                                 if (i + hStep < height - 1 && j + wStep < width - 1 && !checkCFC[i + 1 + hStep][j + 1 + wStep] && map[i + 1 + hStep][j + 1 + wStep]) {
                                     checkCFC[i + 1 + hStep][j + 1 + wStep] = true;
-                                    superImage.setRGB(j + 1 + wStep, i + 1 + hStep, 0);
                                     hStep++;
                                     wStep++;
                                     builder.append(3).append('-');
@@ -206,7 +217,6 @@ public class Processor {
                             case 4:
                                 if (i + hStep < height - 1 && !checkCFC[i + 1 + hStep][j + wStep] && map[i + 1 + hStep][j + wStep]) {
                                     checkCFC[i + 1 + hStep][j + wStep] = true;
-                                    superImage.setRGB(j + wStep, i + 1 + hStep, 0);
                                     hStep++;
                                     builder.append(4).append('-');
                                     ok = true;
@@ -216,7 +226,6 @@ public class Processor {
                             case 5:
                                 if (i + hStep < height - 1 && j + wStep > 0 && !checkCFC[i + 1 + hStep][j - 1 + wStep] && map[i + 1 + hStep][j - 1 + wStep]) {
                                     checkCFC[i + 1 + hStep][j - 1 + wStep] = true;
-                                    superImage.setRGB(j - 1 + wStep, i + 1 + hStep, 0);
                                     hStep++;
                                     wStep--;
                                     builder.append(5).append('-');
@@ -227,7 +236,6 @@ public class Processor {
                             case 6:
                                 if (j + wStep > 0 && !checkCFC[i + hStep][j - 1 + wStep] && map[i + hStep][j - 1 + wStep]) {
                                     checkCFC[i + hStep][j - 1 + wStep] = true;
-                                    superImage.setRGB(j - 1 + wStep, i + hStep, 0);
                                     wStep--;
                                     builder.append(6).append('-');
                                     ok = true;
@@ -237,7 +245,6 @@ public class Processor {
                             case 7:
                                 if (i + hStep > 0 && j + wStep > 0 && !checkCFC[i - 1 + hStep][j - 1 + wStep] && map[i - 1 + hStep][j - 1 + wStep]) {
                                     checkCFC[i - 1 + hStep][j - 1 + wStep] = true;
-                                    superImage.setRGB(j - 1 + wStep, i - 1 + hStep, 0);
                                     hStep--;
                                     wStep--;
                                     builder.append(5).append('-');
@@ -253,13 +260,9 @@ public class Processor {
                         stop = true;
                 } while (!stop);
                 if (count > 80) {
-                    System.out.println(builder.toString());
+                    //System.out.println(builder.toString());
                     // TODO: 24.10.2018 Здесь в builder'e лежит цепной код Фримена. Необходимо придумать механизм сравнения этого кода с некоторым шаблоном, для определения части или полного прямоугольника.
                     // Формат кода: i:j=0-0-0-0-0-....
-                    try {
-                        ImageIO.write(repairProcessor(superImage), "jpeg", new File("test2-" + i + "_" + j + ".jpg"));
-                    } catch (IOException ignored) {
-                    }
                 }
             }
         }
@@ -272,7 +275,7 @@ public class Processor {
             }
         }
         try {
-            ImageIO.write(repairProcessor(newImage), "jpeg", new File("test2.jpg"));
+            ImageIO.write(newImage, "jpeg", new File("w" + width + "_h" + height + "_test2.jpg"));
         } catch (IOException ignored) {
         }
     }
