@@ -12,13 +12,13 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.FileChooser;
 
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
-import java.util.List;
 
 
-public class FXPanel {
+class FXPanel {
 
     private int lastIndex;
     private ListView<BorderPane> listView;
@@ -26,6 +26,7 @@ public class FXPanel {
     private ObservableList<ImageData> imagesList;
     private ImageView mainImageView;
     private boolean running;
+    private String lastDirectory;
 
     @SuppressWarnings("unchecked")
     JFXPanel createPanel() {
@@ -39,24 +40,44 @@ public class FXPanel {
             Button loadButton = (Button) parent.lookup("#loadButton");
             Button proceedButton = (Button) parent.lookup("#proceedButton");
             mainImageView = (ImageView) parent.lookup("#mainImage");
-            lastIndex = 0;
+            lastIndex = -1;
 
             listView.setItems(borderList);
 
+            //File chooser
+            lastDirectory = ".";
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Загрузить изображения");
+            fileChooser.setFileFilter(new FileNameExtensionFilter("image files", "png", "gif", "jpg", "jpeg", "bmp"));
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            fileChooser.setMultiSelectionEnabled(true);
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             //loadButton
             loadButton.setOnAction(event -> {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open Resource File");
-                fileChooser.setInitialDirectory(new File("."));
-                List<File> imageFilesList = fileChooser.showOpenMultipleDialog(null);
-                if (imageFilesList == null) return;
+                fileChooser.setCurrentDirectory(new File(lastDirectory));
+                File[] imageFilesList;
+                switch (fileChooser.showOpenDialog(panel)) {
+                    case JFileChooser.APPROVE_OPTION:
+                        imageFilesList = fileChooser.getSelectedFiles();
+                        break;
+                    case JFileChooser.CANCEL_OPTION:
+                        return;
+                    case JFileChooser.ERROR_OPTION:
+                        return;
+                    default:
+                        return;
+                }
+                lastDirectory = imageFilesList[0].getParent();
                 for (File file : imageFilesList) {
                     ImageData image = new ImageData(file);
                     imagesList.add(image);
                     borderList.add(image.createBorderPane());
                 }
-                listView.getSelectionModel().select(0);
-                imagesList.get(0).setWhiteColor();
+                if (lastIndex == -1) {
+                    lastIndex = 0;
+                    listView.getSelectionModel().select(0);
+                    imagesList.get(0).setWhiteColor();
+                }
             });
 
             //ListView блок

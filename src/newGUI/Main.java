@@ -1,8 +1,6 @@
 package newGUI;
 
 
-import javafx.embed.swing.JFXPanel;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -12,12 +10,16 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class Main extends JFrame {
 
     private Main() throws HeadlessException, IOException {
         super("Распознование автомобильных номеров");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException e) {
+            System.out.println("can't set system UI look and feel");
+        }
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         FXPanel panel = new FXPanel();
         setContentPane(panel.createPanel());
