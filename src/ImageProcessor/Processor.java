@@ -82,7 +82,7 @@ public class Processor {
                     if (map[i - 1][j - 1])
                         if (i == 1 || map[i - 2][j - 1])
                             if (map[i][j - 1])
-                                if (j == 2 || map[i - 1][j - 2])
+                                if (j == 1 || map[i - 1][j - 2])
                                     if (map[i - 1][j])
                                         checkCFC[i - 1][j - 1] = true;
                 if (checkMap[i][j])
@@ -114,7 +114,7 @@ public class Processor {
                                 continue;
                             break;
                         case 3:
-                            if (j < height - 1) {
+                            if (j < width - 1) {
                                 color = origImage.getRGB(j + 1, i) & 0x00FFFFFF;
                             } else
                                 continue;
