@@ -85,6 +85,9 @@ public class ProcessorManager implements Runnable {
                 //res = Processor.linearProcessor(res);
                 System.out.println("linear done");
                 String result = " ";//tesseract.doOCR(res).trim().replace(" ", "");
+
+                //TODO: Useless comment special for Zhenya. Hoping for the best :)
+
                 //System.out.println(result);
                 if (result.isEmpty())
                     imageData.requestSetImageState((byte) 3);
