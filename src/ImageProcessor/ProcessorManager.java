@@ -65,11 +65,13 @@ public class ProcessorManager implements Runnable {
 
     private class ProcessorTask implements Runnable {
 
-        ImageData imageData;
+        private ImageData imageData;
+        private boolean next;
 
         ProcessorTask(ImageData imageData) {
             this.imageData = imageData;
         }
+
 
         @Override
         public void run() {
@@ -78,16 +80,27 @@ public class ProcessorManager implements Runnable {
                 image = ImageIO.read(imageData.getImageFile());
                 ImageIO.write(Processor.testMethod2(image), "jpg", new File(imageData.getImageFile().getName()));
                 System.out.println("test2 done");
-                BufferedImage res = Processor.binaryProcessor(image);
+                //BufferedImage res = Processor.binaryProcessor(image);
+                int[][] data = Processor.conversionProcessor(image);
+                new Processor.BinaryThreadManager(data, data2 -> {
+                    next = true;
+                });
+                while (!next) {
+                    Thread.sleep(1);
+                }
                 System.out.println("binary done");
-                res = Processor.repairProcessor(res);
+                BufferedImage res = new BufferedImage(data[0].length, data.length, BufferedImage.TYPE_INT_RGB);
+                for (int i = 0; i < data.length; i++) {
+                    for (int j = 0; j < data[0].length; j++) {
+                        res.setRGB(j, i, data[i][j]);
+                    }
+                }
+
+                //res = Processor.repairProcessor(res);
                 System.out.println("repair done");
                 //res = Processor.linearProcessor(res);
                 System.out.println("linear done");
                 String result = " ";//tesseract.doOCR(res).trim().replace(" ", "");
-
-                //TODO: Useless comment special for Zhenya. Hoping for the best :)
-
                 //System.out.println(result);
                 if (result.isEmpty())
                     imageData.requestSetImageState((byte) 3);

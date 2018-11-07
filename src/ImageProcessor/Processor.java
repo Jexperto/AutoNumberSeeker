@@ -1,5 +1,7 @@
 package ImageProcessor;
 
+import com.sun.istack.internal.NotNull;
+
 import java.awt.image.BufferedImage;
 
 public class Processor {
@@ -519,4 +521,218 @@ public class Processor {
         return work;
     }
 
+    public static int[][] conversionProcessor(@NotNull BufferedImage origImage) {
+        int height = origImage.getHeight();
+        int width = origImage.getWidth();
+        int[][] work = new int[height][width];
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                work[i][j] = origImage.getRGB(j, i) & 0x00FFFFFF;
+            }
+        }
+        return work;
+    }
+
+    public static BufferedImage conversionProcessor(@NotNull int[][] data) {
+        int height = data.length;
+        int width = data[0].length;
+        BufferedImage work = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                work.setRGB(j, i, data[i][j]);
+            }
+        }
+        return work;
+    }
+
+    public interface CallbackFinished {
+
+        void finished(int[][] data);
+
+    }
+
+    public interface CallbackStopped {
+
+        void stopped();
+
+    }
+
+    public static class BinaryThreadManager implements Runnable {
+
+        private int[][] data;
+        private CallbackFinished callbackFinished;
+        private boolean next;
+
+        public BinaryThreadManager(@NotNull int[][] data, @NotNull CallbackFinished callbackFinished) {
+            this.data = data;
+            this.callbackFinished = callbackFinished;
+            next = false;
+        }
+
+        @Override
+        public void run() {
+            int height = data.length;
+            int width = data[0].length;
+            int stepH = 100;
+            int stepW = 100;
+            for (int i = 0; i < height; i += stepH * 2) {
+                for (int j = (i % 2) * stepW; j < width; j += stepW * 2) {
+                    int localI = i;
+                    int localJ = j;
+                    Thread thread = new Thread(new Runnable() {
+
+                        private CallbackStopped stopped = () -> {
+                            next = true;
+                        };
+
+                        @Override
+                        public void run() {
+                            binaryProcessor(data, localI, localJ, stepH, stepW);
+                            stopped.stopped();
+                        }
+                    });
+                    thread.start();
+                }
+            }
+            while (!next) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ignored) {
+                }
+            }
+            next = false;
+            for (int i = 0; i < height; i += stepH * 2) {
+                for (int j = ((i + 1) % 2) * stepW; j < width; j += stepW * 2) {
+                    int localI = i;
+                    int localJ = j;
+                    Thread thread = new Thread(new Runnable() {
+
+                        private CallbackStopped stopped = () -> {
+                            next = true;
+                        };
+
+                        @Override
+                        public void run() {
+                            binaryProcessor(data, localI, localJ, stepH, stepW);
+                            stopped.stopped();
+                        }
+                    });
+                    thread.start();
+                }
+            }
+            while (!next) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ignored) {
+                }
+            }
+            callbackFinished.finished(data);
+        }
+
+        private void binaryProcessor(int[][] data, int startH, int startW, int lenH, int lenW) {
+            int height = data.length;
+            int width = data[0].length;
+
+            for (int i = startH, maxI = Math.min(startH + lenH, height); i < maxI; i++) {
+                for (int j = startW, maxJ = Math.min(startW + lenW, width); j < maxJ; j++) {
+                    int color = data[i][j];
+
+                    int red = (color >>> 16) & 0xFF;
+                    int green = (color >>> 8) & 0xFF;
+                    int blue = color & 0xFF;
+
+                    int level = 31;
+                    int line = 100;
+                    //Gray to white or black by split-line. Level - gray out step
+                    if ((red < line) && (Math.abs(red - green) < level) && (Math.abs(red - blue) < level) && (Math.abs(blue - green) < level)) {
+                        data[i][j] = 0;
+                        continue;
+                    } else if ((Math.abs(red - green) < level) && (Math.abs(red - blue) < level) && (Math.abs(blue - green) < level)) {
+                        data[i][j] = 0xFFFFFF;
+                        continue;
+                    }
+                    //Yellow to white
+                    if ((Math.abs(red - green) < 80) && (Math.abs(red - blue) > 45) && (Math.abs(blue - green) > 45)) {
+                        data[i][j] = 0xFFFFFF;
+                        continue;
+                    }
+                    //Red to black
+                    if ((Math.abs(red - green) > 80) && (Math.abs(red - blue) > 80) && (Math.abs(blue - green) < 30)) {
+                        data[i][j] = 0;
+                        continue;
+                    }
+                    //Blue to black
+                    if ((Math.abs(red - green) > 80) && (Math.abs(red - blue) > 80) && (Math.abs(blue - green) > 30)) {
+                        data[i][j] = 0;
+                        continue;
+                    }
+
+                    data[i][j] = 0;
+
+                    //схема цвета: 0xAARRGGBB, где AA - прозрачность (не учитывается), RR - красный, GG - зелёный, BB - синий.
+                    //Граничные условия определяют границу разделения цветов на черный и белый.
+                    //На данный момент условия закреплены, если для некоторых изображений будут осечки, придётся делать их динамичными.
+                }
+            }
+        }
+    }
+
+    public class Test2ThreadManager implements Runnable {
+
+        private int[][] data;
+
+        public Test2ThreadManager(int[][] data) {
+            this.data = data;
+        }
+
+        @Override
+        public void run() {
+
+        }
+    }
+
+    public class InversionThreadManager implements Runnable {
+
+        private int[][] data;
+
+        public InversionThreadManager(int[][] data) {
+            this.data = data;
+        }
+
+
+        @Override
+        public void run() {
+
+        }
+    }
+
+    public class RepairThreadManager implements Runnable {
+
+        private int[][] data;
+
+        public RepairThreadManager(int[][] data) {
+            this.data = data;
+        }
+
+        @Override
+        public void run() {
+
+        }
+    }
+
+    public class LinearThreadManager implements Runnable {
+
+        private int[][] data;
+
+        public LinearThreadManager(int[][] data) {
+            this.data = data;
+        }
+
+        @Override
+        public void run() {
+
+        }
+    }
 }

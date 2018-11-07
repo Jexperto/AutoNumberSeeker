@@ -11,7 +11,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import net.sourceforge.tess4j.ITesseract;
@@ -75,6 +74,15 @@ class FXPanel {
                 }
                 lastDirectory = imageFilesList[0].getParent();
                 for (File file : imageFilesList) {
+                    boolean skip = false;
+                    for (ImageData imageData : imagesList) {
+                        if (imageData.getImageFile().getAbsolutePath().equals(file.getAbsolutePath())) {
+                            skip = true;
+                            break;
+                        }
+                    }
+                    if (skip)
+                        continue;
                     ImageData image = new ImageData(file);
                     imagesList.add(image);
                     borderList.add(image.createBorderPane());
@@ -83,7 +91,7 @@ class FXPanel {
                     lastIndex = 0;
                     listView.getSelectionModel().select(0);
                     imagesList.get(0).setWhiteColor();
-                    mainImageView.setImage(new Image("file:///" + imagesList.get(0).getImageFile().getAbsolutePath()));
+                    mainImageView.setImage(imagesList.get(0).getImage());
                 }
                 listView.requestFocus();
             });
@@ -95,7 +103,7 @@ class FXPanel {
                         imagesList.get(lastIndex).setDefaultColor();
                     ImageData image = imagesList.get(index);
                     image.setWhiteColor();
-                    mainImageView.setImage(new Image("file:///" + image.getImageFile().getAbsolutePath()));
+                    mainImageView.setImage(image.getImage());
                     lastIndex = index;
                 }
                 if (running)

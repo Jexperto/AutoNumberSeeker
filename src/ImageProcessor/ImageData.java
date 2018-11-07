@@ -4,11 +4,14 @@ package ImageProcessor;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 
 import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 public class ImageData {
     private File imageFile;
@@ -18,12 +21,24 @@ public class ImageData {
     private Point point2;
     private String number;
     private Label imageState = new Label();
+    private Image image;
 
     public ImageData(File imageFile) {
         this.imageFile = imageFile;
         point1 = null;
         point2 = null;
         number = null;
+    }
+
+    public Image getImage() {
+        if (image == null) {
+            try {
+                image = new Image(new FileInputStream(imageFile));
+            } catch (FileNotFoundException e) {
+                image = null;
+            }
+        }
+        return image;
     }
 
     void requestSetImageState(byte state) {
