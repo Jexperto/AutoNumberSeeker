@@ -1,0 +1,1 @@
+маска названия папки: w_h_numPos_numStage_AlarmRate
