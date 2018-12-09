@@ -1,7 +1,6 @@
 package newGUI;
 
 import ImageProcessor.ImageData;
-import ImageProcessor.ProcessorManager;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,12 +12,19 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.shape.Rectangle;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.objdetect.CascadeClassifier;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
+import java.io.IOException;
 
 
 class FXPanel {
@@ -32,10 +38,15 @@ class FXPanel {
     private String lastDirectory;
     private boolean processorWorking;
     private ITesseract tesseract;
+    private CascadeClassifier platesDetector;
+    private MatOfRect plates;
+    private Rectangle rectangle;
+    private int absolutePlateSize;
+    private JFXPanel panel;
 
     @SuppressWarnings("unchecked")
-    JFXPanel createPanel() {
-        JFXPanel panel = new JFXPanel();
+    JFXPanel createPanel() throws IOException {
+        panel = new JFXPanel();
         try {
             imagesList = FXCollections.observableArrayList();
             ObservableList<BorderPane> borderList = FXCollections.observableArrayList();
@@ -46,7 +57,9 @@ class FXPanel {
             Button proceedButton = (Button) parent.lookup("#proceedButton");
             mainImageView = (ImageView) parent.lookup("#mainImage");
             lastIndex = -1;
-
+            platesDetector = new CascadeClassifier();
+            System.out.println(platesDetector.load("C:/Users/zzhma/IdeaProjects/AutoNumberSeeker/resourse/cascades/haar/60_20_3500_16_4/cascade.xml"));
+            plates = new MatOfRect();
             listView.setItems(borderList);
 
             //File chooser
@@ -91,7 +104,7 @@ class FXPanel {
                     lastIndex = 0;
                     listView.getSelectionModel().select(0);
                     imagesList.get(0).setWhiteColor();
-                    mainImageView.setImage(imagesList.get(0).getImage());
+                    mainImageView.setImage(imagesList.get(0).getWritableImage());
                 }
                 listView.requestFocus();
             });
@@ -103,30 +116,57 @@ class FXPanel {
                         imagesList.get(lastIndex).setDefaultColor();
                     ImageData image = imagesList.get(index);
                     image.setWhiteColor();
-                    mainImageView.setImage(image.getImage());
+                    mainImageView.setImage(image.getWritableImage());
                     lastIndex = index;
                 }
                 if (running)
                     Platform.runLater(listenThread);
             };
             processorWorking = false;
+
             proceedButton.setOnAction(event -> {
-                if (!processorWorking) {
-                    ProcessorManager processorManager = new ProcessorManager(FXCollections.observableArrayList(imagesList), tesseract, () -> {
-                        processorWorking = false;
-                        panel.requestFocus();
-                    });
-                    processorWorking = processorManager.start();
+            for (ImageData imageData:imagesList) {
+//                BufferedImage image = null;
+//                try {
+//                    image = ImageIO.read(imageData.getImageFile());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+                Mat matImage = Imgcodecs.imread(imageData.getImageFile().getAbsolutePath());
+                int height = matImage.rows();
+                if (Math.round(height * 0.2f) > 0)
+                    this.absolutePlateSize = Math.round(height * 0.2f);
+                platesDetector.detectMultiScale(matImage, plates);
+                //platesDetector.detectMultiScale(matImage, plates, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(this.absolutePlateSize, this.absolutePlateSize), new Size());
+                Rect[] plateRects = plates.toArray();
+                int h = plateRects.length;
+                if(h > 0) {
+
+                    imageData.setRect(plateRects[0].x, plateRects[0].y, plateRects[0].width, plateRects[0].height);
+                    //System.out.println(plateRects[0].toString());
                 }
+                else
+                    System.out.println("ничего нету на картинке :(");
+            }
             });
+
+//            proceedButton.setOnAction(event -> {
+//                if (!processorWorking) {
+//                    ProcessorManager processorManager = new ProcessorManager(FXCollections.observableArrayList(imagesList), tesseract, () -> {
+//                        processorWorking = false;
+//                        panel.requestFocus();
+//                    });
+//                    processorWorking = processorManager.start();
+//                }
 
             tesseract = new Tesseract();
             tesseract.setLanguage("leu");
             tesseract.setDatapath(".");
             tesseract.setTessVariable("tessedit_char_whitelist", "acekopxyABCEHKMOPTXYD0123456789");
+
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("CRITICAL ERROR: FAIL INIT MAIN FRAME");
+            System.out.println("CRITICAL ERROR: FAILED INITIALIZATION OF MAIN FRAME");
             System.exit(-1);
         }
         return panel;
@@ -135,6 +175,14 @@ class FXPanel {
     void startListener() {
         running = true;
         Platform.runLater(listenThread);
+    }
+
+//    void displayImage(ImageData imageData){
+//        mainImageView.setImage(imageData.getWritableImage());
+//        imageData.displayRect();
+//    }
+    void processImages(){
+
     }
 
     void stopListener() {

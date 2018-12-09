@@ -5,40 +5,42 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 
-import java.awt.*;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 
 public class ImageData {
     private File imageFile;
     private byte state;
     private byte currentColor;
-    private Point point1;
-    private Point point2;
     private String number;
     private Label imageState = new Label();
-    private Image image;
+    private WritableImage writableImage;
+    private Rectangle rectangle;
+    private PixelWriter pixelWriter;
 
     public ImageData(File imageFile) {
         this.imageFile = imageFile;
-        point1 = null;
-        point2 = null;
-        number = null;
+        rectangle = new Rectangle();
+        rectangle.setFill(Color.YELLOW);
+        rectangle.setStroke(Color.RED);
+        rectangle.setStrokeWidth(4);
+
     }
 
-    public Image getImage() {
-        if (image == null) {
-            try {
-                image = new Image(new FileInputStream(imageFile));
-            } catch (FileNotFoundException e) {
-                image = null;
-            }
+    public Image getWritableImage() {
+        if (writableImage == null) {
+
+            Image image = new Image("file:///" + imageFile.getAbsolutePath());
+            writableImage = new WritableImage(image.getPixelReader(), (int) image.getWidth(), (int) image.getHeight());
+            pixelWriter = writableImage.getPixelWriter();
+
         }
-        return image;
+        return writableImage;
     }
 
     void requestSetImageState(byte state) {
@@ -110,6 +112,52 @@ public class ImageData {
         BorderPane.setMargin(imageName, new Insets(0, 0, 0, 20));
         BorderPane.setMargin(imageState, new Insets(0, 20, 0, 0));
         return borderPane;
+    }
+
+    public void displayRect() {
+        rectangle.setVisible(true);
+
+        System.out.println("displayed rect");
+    }
+
+
+    public void setRect(int x, int y, int width, int height) {
+        Platform.runLater(()->{
+        if (pixelWriter == null)
+            getWritableImage();
+        rectangle.setX(x);
+        rectangle.setY(y);
+        rectangle.setWidth(width);
+        rectangle.setHeight(height);
+
+        for (int i = x; i < x + width - 1; i++) {
+            pixelWriter.setColor(i, y, Color.GREEN);
+            pixelWriter.setColor(i, y+1, Color.GREEN);
+            pixelWriter.setColor(i, y+2, Color.GREEN);
+            pixelWriter.setColor(i, y+3, Color.GREEN);
+            pixelWriter.setColor(i, y + height - 1, Color.GREEN);
+            pixelWriter.setColor(i, y + height - 2, Color.GREEN);
+            pixelWriter.setColor(i, y + height - 3, Color.GREEN);
+            pixelWriter.setColor(i, y + height - 4, Color.GREEN);
+        }
+        for (int i = y + 1; i < y + height - 2; i++) {
+            pixelWriter.setColor(x, i, Color.GREEN);
+            pixelWriter.setColor(x+1, i, Color.GREEN);
+            pixelWriter.setColor(x+2, i, Color.GREEN);
+            pixelWriter.setColor(x+3, i, Color.GREEN);
+            pixelWriter.setColor(x + width - 1, i, Color.GREEN);
+            pixelWriter.setColor(x + width - 2, i, Color.GREEN);
+            pixelWriter.setColor(x + width - 3, i, Color.GREEN);
+            pixelWriter.setColor(x + width - 4, i, Color.GREEN);
+        }
+        requestSetImageState((byte) 2);
+
+        System.out.println(x + " " + y + " " + width + " " + height);
+        });
+    }
+
+    public Rectangle getRect() {
+        return rectangle;
     }
 
     void setNumber(String number) {

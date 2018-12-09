@@ -1,12 +1,15 @@
 package newGUI;
 
 
+import com.sun.jna.Library;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +18,12 @@ public class Main extends JFrame {
 
     private Main() throws HeadlessException, IOException {
         super("Распознование автомобильных номеров");
+        File lib = new File("resourse\\opencv\\x64\\" + System.mapLibraryName("opencv_java343_64"));
+        System.load(lib.getAbsolutePath());
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException e) {
-            System.out.println("can't set system UI look and feel");
+            System.err.println("can't set system UI look and feel");
         }
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         FXPanel panel = new FXPanel();

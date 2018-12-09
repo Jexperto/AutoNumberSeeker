@@ -2,10 +2,13 @@ package ImageProcessor;
 
 import javafx.collections.ObservableList;
 import net.sourceforge.tess4j.ITesseract;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.objdetect.Objdetect;
 
 public class ProcessorManager implements Runnable {
 
@@ -15,11 +18,13 @@ public class ProcessorManager implements Runnable {
     private int currentThreads;
 
     private ITesseract tesseract;
+    private String platesDetectorName;
 
-    public ProcessorManager(ObservableList<ImageData> imageData, ITesseract tesseract, CallbackProcessor stopSignal) {
+    public ProcessorManager(ObservableList<ImageData> imageData, ITesseract tesseract, String classifierName, CallbackProcessor stopSignal) {
         this.imageData = imageData;
         this.stopSignal = stopSignal;
         this.tesseract = tesseract;
+        this.platesDetectorName = classifierName;
         countRunThreads = 0;
     }
 
@@ -66,7 +71,6 @@ public class ProcessorManager implements Runnable {
     private class ProcessorTask implements Runnable {
 
         private ImageData imageData;
-        private boolean next;
 
         ProcessorTask(ImageData imageData) {
             this.imageData = imageData;
@@ -75,7 +79,42 @@ public class ProcessorManager implements Runnable {
 
         @Override
         public void run() {
-            try {
+            CascadeClassifier platesDetector = new CascadeClassifier();
+            platesDetector.load(platesDetectorName);
+            MatOfRect plates = new MatOfRect();
+            int absolutePlateSize = 0;
+            Mat matImage = Imgcodecs.imread(imageData.getImageFile().getAbsolutePath());
+            int height = matImage.rows();
+            if (Math.round(height * 0.2f) > 0)
+                absolutePlateSize = Math.round(height * 0.2f);
+            //platesDetector.detectMultiScale(matImage, plates);
+            platesDetector.detectMultiScale(matImage, plates, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(absolutePlateSize, absolutePlateSize), new Size());
+            Rect[] plateRects = plates.toArray();
+            int h = plateRects.length;
+            if (h > 0) {
+                imageData.setRect(plateRects[0].x, plateRects[0].y, plateRects[0].width, plateRects[0].height);
+                imageData.requestSetImageState((byte) 2);
+            } else {
+                System.out.println("ничего нету на картинке :(");
+                imageData.requestSetImageState((byte) 3);
+            }
+            countRunThreads--;
+            currentThreads--;
+            //}
+        }
+
+        boolean start() {
+            if (imageData == null)
+                return false;
+            Thread thread = new Thread(this, "Processor on " + imageData.getImageFile().getName());
+            thread.start();
+            return true;
+        }
+    }
+}
+
+
+/*try {
                 BufferedImage image;
                 image = ImageIO.read(imageData.getImageFile());
                 ImageIO.write(Processor.testMethod2(image), "jpg", new File(imageData.getImageFile().getName()));
@@ -112,18 +151,4 @@ public class ProcessorManager implements Runnable {
             } catch (Exception e) {
                 e.printStackTrace();
                 imageData.requestSetImageState((byte) 3);
-            } finally {
-                countRunThreads--;
-                currentThreads--;
-            }
-        }
-
-        boolean start() {
-            if (imageData == null)
-                return false;
-            Thread thread = new Thread(this, "Processor on " + imageData.getImageFile().getName());
-            thread.start();
-            return true;
-        }
-    }
-}
+            } finally {*/
