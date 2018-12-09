@@ -10,6 +10,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.opencv.core.Rect;
 
 import java.io.File;
 
@@ -21,6 +22,7 @@ public class ImageData {
     private Label imageState = new Label();
     private WritableImage writableImage;
     private Rectangle rectangle;
+    private Rect[] rectangleSet;
     private PixelWriter pixelWriter;
 
     public ImageData(File imageFile) {
@@ -121,43 +123,56 @@ public class ImageData {
     }
 
 
-    public void setRect(int x, int y, int width, int height) {
-        Platform.runLater(()->{
-        if (pixelWriter == null)
-            getWritableImage();
-        rectangle.setX(x);
-        rectangle.setY(y);
-        rectangle.setWidth(width);
-        rectangle.setHeight(height);
+    private void setRect(int x1, int y1, int width1, int height1) {
+        final int x = x1;
+        final int y = y1;
+        final int width = width1;
+        final int height = height1;
+            if (pixelWriter == null)
+                getWritableImage();
+            rectangle.setX(x);
+            rectangle.setY(y);
+            rectangle.setWidth(width);
+            rectangle.setHeight(height);
 
-        for (int i = x; i < x + width - 1; i++) {
-            pixelWriter.setColor(i, y, Color.GREEN);
-            pixelWriter.setColor(i, y+1, Color.GREEN);
-            pixelWriter.setColor(i, y+2, Color.GREEN);
-            pixelWriter.setColor(i, y+3, Color.GREEN);
-            pixelWriter.setColor(i, y + height - 1, Color.GREEN);
-            pixelWriter.setColor(i, y + height - 2, Color.GREEN);
-            pixelWriter.setColor(i, y + height - 3, Color.GREEN);
-            pixelWriter.setColor(i, y + height - 4, Color.GREEN);
-        }
-        for (int i = y + 1; i < y + height - 2; i++) {
-            pixelWriter.setColor(x, i, Color.GREEN);
-            pixelWriter.setColor(x+1, i, Color.GREEN);
-            pixelWriter.setColor(x+2, i, Color.GREEN);
-            pixelWriter.setColor(x+3, i, Color.GREEN);
-            pixelWriter.setColor(x + width - 1, i, Color.GREEN);
-            pixelWriter.setColor(x + width - 2, i, Color.GREEN);
-            pixelWriter.setColor(x + width - 3, i, Color.GREEN);
-            pixelWriter.setColor(x + width - 4, i, Color.GREEN);
-        }
-        requestSetImageState((byte) 2);
+            for (int i = x; i < x + width - 1; i++) {
+                pixelWriter.setColor(i, y, Color.GREEN);
+                pixelWriter.setColor(i, y + 1, Color.GREEN);
+                pixelWriter.setColor(i, y + 2, Color.GREEN);
+                pixelWriter.setColor(i, y + 3, Color.GREEN);
+                pixelWriter.setColor(i, y + height - 1, Color.GREEN);
+                pixelWriter.setColor(i, y + height - 2, Color.GREEN);
+                pixelWriter.setColor(i, y + height - 3, Color.GREEN);
+                pixelWriter.setColor(i, y + height - 4, Color.GREEN);
+            }
+            for (int i = y + 1; i < y + height - 2; i++) {
+                pixelWriter.setColor(x, i, Color.GREEN);
+                pixelWriter.setColor(x + 1, i, Color.GREEN);
+                pixelWriter.setColor(x + 2, i, Color.GREEN);
+                pixelWriter.setColor(x + 3, i, Color.GREEN);
+                pixelWriter.setColor(x + width - 1, i, Color.GREEN);
+                pixelWriter.setColor(x + width - 2, i, Color.GREEN);
+                pixelWriter.setColor(x + width - 3, i, Color.GREEN);
+                pixelWriter.setColor(x + width - 4, i, Color.GREEN);
+            }
 
-        System.out.println(x + " " + y + " " + width + " " + height);
-        });
+            System.out.println(imageFile.getName() + ": " + x + " " + y + " " + width + " " + height);
+
     }
 
     public Rectangle getRect() {
         return rectangle;
+    }
+
+    public Rect getRect(int index) {
+        return rectangleSet != null ? rectangleSet[index] : null;
+    }
+
+    public void setRectangleSet(Rect[] rectangleSet) {
+        this.rectangleSet = rectangleSet;
+        for (Rect rect : rectangleSet) {
+            setRect(rect.x, rect.y, rect.width, rect.height);
+        }
     }
 
     void setNumber(String number) {

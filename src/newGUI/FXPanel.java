@@ -1,6 +1,7 @@
 package newGUI;
 
 import ImageProcessor.ImageData;
+import ImageProcessor.ProcessorManager;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -18,8 +19,11 @@ import net.sourceforge.tess4j.Tesseract;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.objdetect.Objdetect;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -39,6 +43,7 @@ class FXPanel {
     private boolean processorWorking;
     private ITesseract tesseract;
     private CascadeClassifier platesDetector;
+    private String platesDetectorName;
     private MatOfRect plates;
     private Rectangle rectangle;
     private int absolutePlateSize;
@@ -58,7 +63,8 @@ class FXPanel {
             mainImageView = (ImageView) parent.lookup("#mainImage");
             lastIndex = -1;
             platesDetector = new CascadeClassifier();
-            System.out.println(platesDetector.load("C:/Users/zzhma/IdeaProjects/AutoNumberSeeker/resourse/cascades/haar/60_20_3500_16_4/cascade.xml"));
+            platesDetectorName = "C:\\Users\\zzhma\\IdeaProjects\\AutoNumberSeeker\\resourse\\cascades\\haar\\60_20_500_1000_14_4\\cascade.xml";
+            System.out.println(platesDetector.load(platesDetectorName));
             plates = new MatOfRect();
             listView.setItems(borderList);
 
@@ -124,40 +130,44 @@ class FXPanel {
             };
             processorWorking = false;
 
-            proceedButton.setOnAction(event -> {
-            for (ImageData imageData:imagesList) {
+//            proceedButton.setOnAction(event -> {
+//            for (ImageData imageData:imagesList) {
 //                BufferedImage image = null;
 //                try {
 //                    image = ImageIO.read(imageData.getImageFile());
 //                } catch (IOException e) {
 //                    e.printStackTrace();
 //                }
-                Mat matImage = Imgcodecs.imread(imageData.getImageFile().getAbsolutePath());
-                int height = matImage.rows();
-                if (Math.round(height * 0.2f) > 0)
-                    this.absolutePlateSize = Math.round(height * 0.2f);
-                platesDetector.detectMultiScale(matImage, plates);
-                //platesDetector.detectMultiScale(matImage, plates, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(this.absolutePlateSize, this.absolutePlateSize), new Size());
-                Rect[] plateRects = plates.toArray();
-                int h = plateRects.length;
-                if(h > 0) {
-
-                    imageData.setRect(plateRects[0].x, plateRects[0].y, plateRects[0].width, plateRects[0].height);
-                    //System.out.println(plateRects[0].toString());
-                }
-                else
-                    System.out.println("ничего нету на картинке :(");
-            }
-            });
-
-//            proceedButton.setOnAction(event -> {
-//                if (!processorWorking) {
-//                    ProcessorManager processorManager = new ProcessorManager(FXCollections.observableArrayList(imagesList), tesseract, () -> {
-//                        processorWorking = false;
-//                        panel.requestFocus();
-//                    });
-//                    processorWorking = processorManager.start();
+//                Mat matImage = Imgcodecs.imread(imageData.getImageFile().getAbsolutePath());
+//                Mat grayFrame = new Mat();
+//                Imgproc.cvtColor(matImage, grayFrame, Imgproc.COLOR_BGR2GRAY);
+//                Imgproc.equalizeHist(grayFrame, grayFrame);
+//                int height = matImage.rows();
+//                if (Math.round(height * 0.2f) > 0)
+//                    this.absolutePlateSize = Math.round(height * 0.2f);
+//                //platesDetector.detectMultiScale(matImage, plates);
+//                platesDetector.detectMultiScale(grayFrame, plates, 1.1, 4, Objdetect.CASCADE_SCALE_IMAGE, new Size(this.absolutePlateSize*3, this.absolutePlateSize), new Size());
+//                Rect[] plateRects = plates.toArray();
+//                int h = plateRects.length;
+//                if(h > 0) {
+//
+//                    imageData.setRectangleSet(plateRects);
+//                    //System.out.println(plateRects[0].toString());
 //                }
+//                else
+//                    System.out.println("ничего нету на картинке :(");
+//            }
+//            });
+
+            proceedButton.setOnAction(event -> {
+                if (!processorWorking) {
+                    ProcessorManager processorManager = new ProcessorManager(FXCollections.observableArrayList(imagesList), tesseract, platesDetectorName, () -> {
+                        processorWorking = false;
+                        panel.requestFocus();
+                    });
+                    processorWorking = processorManager.start();
+                }
+            });
 
             tesseract = new Tesseract();
             tesseract.setLanguage("leu");
@@ -177,11 +187,11 @@ class FXPanel {
         Platform.runLater(listenThread);
     }
 
-//    void displayImage(ImageData imageData){
+    //    void displayImage(ImageData imageData){
 //        mainImageView.setImage(imageData.getWritableImage());
 //        imageData.displayRect();
 //    }
-    void processImages(){
+    void processImages() {
 
     }
 

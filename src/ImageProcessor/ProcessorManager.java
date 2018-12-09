@@ -7,6 +7,7 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 
@@ -84,15 +85,19 @@ public class ProcessorManager implements Runnable {
             MatOfRect plates = new MatOfRect();
             int absolutePlateSize = 0;
             Mat matImage = Imgcodecs.imread(imageData.getImageFile().getAbsolutePath());
+            Mat grayFrame = new Mat();
+            Imgproc.cvtColor(matImage, grayFrame, Imgproc.COLOR_BGR2GRAY);
+            Imgproc.equalizeHist(grayFrame, grayFrame);
             int height = matImage.rows();
             if (Math.round(height * 0.2f) > 0)
                 absolutePlateSize = Math.round(height * 0.2f);
             //platesDetector.detectMultiScale(matImage, plates);
-            platesDetector.detectMultiScale(matImage, plates, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(absolutePlateSize, absolutePlateSize), new Size());
+            platesDetector.detectMultiScale(grayFrame, plates, 1.1, 6, Objdetect.CASCADE_SCALE_IMAGE, new Size(60, 20), new Size());
+            //platesDetector.detectMultiScale(matImage, plates, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(absolutePlateSize, absolutePlateSize), new Size());
             Rect[] plateRects = plates.toArray();
             int h = plateRects.length;
             if (h > 0) {
-                imageData.setRect(plateRects[0].x, plateRects[0].y, plateRects[0].width, plateRects[0].height);
+                imageData.setRectangleSet(plateRects);
                 imageData.requestSetImageState((byte) 2);
             } else {
                 System.out.println("ничего нету на картинке :(");
