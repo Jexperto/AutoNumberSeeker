@@ -88,11 +88,12 @@ public class ProcessorManager implements Runnable {
             Mat grayFrame = new Mat();
             Imgproc.cvtColor(matImage, grayFrame, Imgproc.COLOR_BGR2GRAY);
             Imgproc.equalizeHist(grayFrame, grayFrame);
-            int height = matImage.rows();
-            if (Math.round(height * 0.2f) > 0)
-                absolutePlateSize = Math.round(height * 0.2f);
+            int height = grayFrame.rows();
+            if (Math.round(height * 0.05f) > 0) {
+                absolutePlateSize = Math.round(height * 0.05f);
+            }
             //platesDetector.detectMultiScale(matImage, plates);
-            platesDetector.detectMultiScale(grayFrame, plates, 1.1, 6, Objdetect.CASCADE_SCALE_IMAGE, new Size(60, 20), new Size());
+            platesDetector.detectMultiScale(grayFrame, plates, 1.1, 6, Objdetect.CASCADE_SCALE_IMAGE, new org.opencv.core.Size(absolutePlateSize,absolutePlateSize));
             //platesDetector.detectMultiScale(matImage, plates, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(absolutePlateSize, absolutePlateSize), new Size());
             Rect[] plateRects = plates.toArray();
             int h = plateRects.length;
