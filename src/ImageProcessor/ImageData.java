@@ -136,24 +136,24 @@ public class ImageData {
             rectangle.setHeight(height);
 
             for (int i = x; i < x + width - 1; i++) {
-                pixelWriter.setColor(i, y, Color.GREEN);
-                pixelWriter.setColor(i, y + 1, Color.GREEN);
-                pixelWriter.setColor(i, y + 2, Color.GREEN);
-                pixelWriter.setColor(i, y + 3, Color.GREEN);
-                pixelWriter.setColor(i, y + height - 1, Color.GREEN);
-                pixelWriter.setColor(i, y + height - 2, Color.GREEN);
-                pixelWriter.setColor(i, y + height - 3, Color.GREEN);
-                pixelWriter.setColor(i, y + height - 4, Color.GREEN);
+                pixelWriter.setColor(i, y, Color.RED);
+                pixelWriter.setColor(i, y + 1, Color.RED);
+                pixelWriter.setColor(i, y + 2, Color.RED);
+                pixelWriter.setColor(i, y + 3, Color.RED);
+                pixelWriter.setColor(i, y + height - 1, Color.RED);
+                pixelWriter.setColor(i, y + height - 2, Color.RED);
+                pixelWriter.setColor(i, y + height - 3, Color.RED);
+                pixelWriter.setColor(i, y + height - 4, Color.RED);
             }
             for (int i = y + 1; i < y + height - 2; i++) {
-                pixelWriter.setColor(x, i, Color.GREEN);
-                pixelWriter.setColor(x + 1, i, Color.GREEN);
-                pixelWriter.setColor(x + 2, i, Color.GREEN);
-                pixelWriter.setColor(x + 3, i, Color.GREEN);
-                pixelWriter.setColor(x + width - 1, i, Color.GREEN);
-                pixelWriter.setColor(x + width - 2, i, Color.GREEN);
-                pixelWriter.setColor(x + width - 3, i, Color.GREEN);
-                pixelWriter.setColor(x + width - 4, i, Color.GREEN);
+                pixelWriter.setColor(x, i, Color.RED);
+                pixelWriter.setColor(x + 1, i, Color.RED);
+                pixelWriter.setColor(x + 2, i, Color.RED);
+                pixelWriter.setColor(x + 3, i, Color.RED);
+                pixelWriter.setColor(x + width - 1, i, Color.RED);
+                pixelWriter.setColor(x + width - 2, i, Color.RED);
+                pixelWriter.setColor(x + width - 3, i, Color.RED);
+                pixelWriter.setColor(x + width - 4, i, Color.RED);
             }
 
             System.out.println(imageFile.getName() + ": " + x + " " + y + " " + width + " " + height);

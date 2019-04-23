@@ -63,7 +63,7 @@ class FXPanel {
             mainImageView = (ImageView) parent.lookup("#mainImage");
             lastIndex = -1;
             platesDetector = new CascadeClassifier();
-            platesDetectorName = "C:\\Users\\zzhma\\IdeaProjects\\AutoNumberSeeker\\resourse\\cascades\\haar\\60_20_500_1000_14_4\\cascade.xml";
+            platesDetectorName = FXPanel.class.getResource("../cascades/cascade.xml").getPath().substring(1);
             System.out.println(platesDetector.load(platesDetectorName));
             plates = new MatOfRect();
             listView.setItems(borderList);
